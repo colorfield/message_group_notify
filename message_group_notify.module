@@ -7,8 +7,6 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\node\Entity\Node;
-use Drupal\message\Entity\Message;
 
 /**
  * Implements hook_help().
@@ -38,26 +36,28 @@ function message_group_notify_theme() {
 }
 
 /**
+ * Implements hook_entity_insert().
+ */
+function message_group_notify_entity_insert(EntityInterface $entity) {
+  /** @var \Drupal\message_group_notify\EntitySubscriber $subscriber */
+  $subscriber = \Drupal::service('message_group_notify.entity_subscriber');
+  $subscriber->onCreate($entity);
+}
+
+/**
  * Implements hook_entity_update().
- *
- * @todo replace by a ContentEntityEventSubscriber
  */
 function message_group_notify_entity_update(EntityInterface $entity) {
-  if ($entity instanceof Node) {
-    $message = Message::create(['template' => 'group_notify_node', 'uid' => $entity->get('uid')]);
-    $message->set('field_node_reference', $entity);
-    $message->set('field_published', $entity->isPublished());
-    // $message->set('field_mail_subject', $entity->label());
-    $message->save();
+  /** @var \Drupal\message_group_notify\EntitySubscriber $subscriber */
+  $subscriber = \Drupal::service('message_group_notify.entity_subscriber');
+  $subscriber->onUpdate($entity);
+}
 
-    $params = [
-      'mail' => \Drupal::config('system.site')->get('mail'),
-      // 'rendered fields' => [
-      // 'mail_subject' => 'field_mail_subject',
-      // 'mail_body' => 'field_mail_subject',
-      // ],.
-    ];
-    $notifier = \Drupal::service('message_notify.sender');
-    $notifier->send($message, $params, 'email');
-  }
+/**
+ * Implements hook_entity_update().
+ */
+function message_group_notify_entity_delete(EntityInterface $entity) {
+  /** @var \Drupal\message_group_notify\EntitySubscriber $subscriber */
+  $subscriber = \Drupal::service('message_group_notify.entity_subscriber');
+  $subscriber->onDelete($entity);
 }
