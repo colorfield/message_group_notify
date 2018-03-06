@@ -1,0 +1,6 @@
+message_group_notify.settings:
+  title: 'Message Group Notify'
+  route_name: message_group_notify.settings
+  description: 'Message Group Notify settings.'
+  parent: message.main_settings
+  weight: 99

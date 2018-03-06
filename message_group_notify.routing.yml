@@ -1,0 +1,10 @@
+message_group_notify.settings:
+  path: '/admin/config/message/message_group_notify'
+  defaults:
+    _form: '\Drupal\message_group_notify\Form\SettingsForm'
+    _title: 'Message Group Notify settings'
+  requirements:
+  # @todo probably replace by 'adminster messages'
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
