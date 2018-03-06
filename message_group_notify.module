@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * Holds hook implementation for the Message Group Notify module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\Entity\Node;
+use Drupal\message\Entity\Message;
+
+/**
+ * Implements hook_help().
+ */
+function message_group_notify_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the message_group_notify module.
+    case 'help.page.message_group_notify':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Notifies groups on entity creation or update.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function message_group_notify_theme() {
+  return [
+    'message_group_notify' => [
+      'render element' => 'children',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * @todo replace by a ContentEntityEventSubscriber
+ */
+function message_group_notify_entity_update(EntityInterface $entity) {
+  if ($entity instanceof Node) {
+    $message = Message::create(['template' => 'group_notify_node', 'uid' => $entity->get('uid')]);
+    $message->set('field_node_reference', $entity);
+    $message->set('field_published', $entity->isPublished());
+    // $message->set('field_mail_subject', $entity->label());
+    $message->save();
+
+    $params = [
+      'mail' => \Drupal::config('system.site')->get('mail'),
+      // 'rendered fields' => [
+      // 'mail_subject' => 'field_mail_subject',
+      // 'mail_body' => 'field_mail_subject',
+      // ],.
+    ];
+    $notifier = \Drupal::service('message_notify.sender');
+    $notifier->send($message, $params, 'email');
+  }
+}
