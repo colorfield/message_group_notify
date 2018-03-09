@@ -1,0 +1,5 @@
+message_group_notify.node_message:
+  route_name: message_group_notify.node_message
+  title: 'Message'
+  base_route: entity.node.canonical
+  weight: 100

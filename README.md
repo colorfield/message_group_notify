@@ -6,6 +6,12 @@ Drupal 8 module that sends Messages on entity creation or update to Groups.
 Group types are configurable as internal or external set of Contacts
 (example: Drupal Role, Drupal Group, Mailchimp List, CiviCRM Group).
 
+Groups that should receive messages will be selectable in several ways.
+- Group selection per content type.
+- Group selection per node.
+
+For content types only on the first release.
+
 Messages can be sent through a channel
 (example: website block, mail, PWA notification, ...).
 Mail relay is configurable per Group type
@@ -22,11 +28,17 @@ Messages can be included in the weekly digest on the entity create/edit form.
 ### Configure the Message view mode of Email 
 
 - After enabling the module, head to 
-'Structure > Message templates > Manage display'
+'Structure > Message templates > Manage display'.
 - On the 'Notify - Email body' tab : set the Field e.g. to 
-'Node reference' and Format to 'Rendered entity'
+'Node reference' and Format to 'Rendered entity'.
 - On the 'Notify - Email subject' : set the Field e.g. to  'Node reference'
-and Format to 'Label (No link)' 
+and Format to 'Label (No link)'.
+- Edit an entity and check your mail.
+
+### Configure the Message templates
+
+- Optionally, edit the Message template with tokens or text to customize
+the messages available from /admin/content/messages.
 
 ## Roadmap
 

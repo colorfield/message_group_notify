@@ -4,7 +4,16 @@ message_group_notify.settings:
     _form: '\Drupal\message_group_notify\Form\SettingsForm'
     _title: 'Message Group Notify settings'
   requirements:
-  # @todo probably replace by 'adminster messages'
+    # @todo probably replace by 'adminster messages' or dedicated permission
     _permission: 'administer site configuration'
   options:
     _admin_route: TRUE
+
+message_group_notify.node_message:
+ path: '/node/{node}/messages'
+ defaults:
+   _controller: '\Drupal\message_group_notify\Controller\NodeMessageController::messages'
+   _title: 'Messages'
+ requirements:
+   # @todo probably replace by 'adminster messages' or dedicated permission
+   _permission: 'administer site configuration'
