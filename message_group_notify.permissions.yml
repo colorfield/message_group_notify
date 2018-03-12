@@ -1,0 +1,7 @@
+administer message group notify:
+  title: Administer message group notify
+  description: Administer group types and per entity configuration.
+
+use message group notify:
+  title: Use message group notify
+  description: Send message notifications to groups.

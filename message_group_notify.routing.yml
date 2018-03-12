@@ -4,8 +4,7 @@ message_group_notify.settings:
     _form: '\Drupal\message_group_notify\Form\SettingsForm'
     _title: 'Message Group Notify settings'
   requirements:
-    # @todo probably replace by 'adminster messages' or dedicated permission
-    _permission: 'administer site configuration'
+    _permission: 'administer message group notify'
   options:
     _admin_route: TRUE
 
@@ -15,9 +14,7 @@ entity.node.message_group_notify:
    _controller: '\Drupal\message_group_notify\Controller\NodeMessageController::messages'
    _title: 'Notify groups and view sent messages'
  requirements:
-   # @todo this controller should only be accessed when per_node setting is defined
-   # @todo probably replace by 'adminster messages' or dedicated permission
-   _permission: 'administer site configuration'
+   _permission: 'use message group notify'
  options:
    _node_operation_route: TRUE
    _admin_route: TRUE
@@ -28,5 +25,4 @@ entity.node_type.message_group_notify:
     _title: 'Message Group Notify'
     _form: '\Drupal\message_group_notify\Form\NodeTypeSettingsForm'
   requirements:
-    # @todo probably replace by 'adminster messages' or dedicated permission
-    _permission: 'administer site configuration'
+    _permission: 'administer message group notify'
