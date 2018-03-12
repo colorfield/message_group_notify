@@ -35,15 +35,21 @@ class NodeMessageController extends ControllerBase {
   }
 
   /**
-   * Messages.
+   * Gets sent messages per group and provides group notify feature.
    *
-   * @return string
-   *   Return Hello string.
+   * @param int $node
+   *   Node entity id.
+   *
+   * @return array
+   *   Render array of sent messages and notify groups form.
    */
-  public function messages() {
+  public function messages($node) {
+    // @todo check if this node is published first
     // @todo list of sent messages by groups for this node.
     // @todo send test message
     // @todo send message
+    // @todo get message_group_notify__node_message form
+    $query = \Drupal::entityQuery('message');
     return [
       '#type' => 'markup',
       '#markup' => $this->t('Implement method: messages'),

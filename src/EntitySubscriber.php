@@ -82,6 +82,7 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
    * {@inheritdoc}
    */
   protected function onCallback($operation, EntityInterface $entity) {
+    // @todo this callback should be handled only if the configuration is per bundle, not per node
     // $config = $this->configFactory->get('message_group_notify.settings');
     // drupal_set_message($entity->label() . ' ' . $operation);.
     if ($entity instanceof Node) {
@@ -89,6 +90,9 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
       // $message = $this->entityTypeManager->getStorage('message');.
       $message = Message::create(['template' => 'group_notify_node', 'uid' => $entity->get('uid')]);
       $message->set('field_node_reference', $entity);
+      // @todo set group reference
+      // @todo create MessageGroupType config entity and MessageGroup content entity
+      // $message->set('field_message_group_reference', $entity);
       $message->set('field_published', $entity->isPublished());
       $message->save();
 

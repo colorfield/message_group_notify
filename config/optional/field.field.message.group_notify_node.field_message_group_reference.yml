@@ -1,17 +1,18 @@
-uuid: 147e3633-b1e7-41f0-a1a8-dcd653d847ad
+uuid: 9f2d879d-6293-4b6f-82f6-73fbaf9a42f0
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.message.field_node_reference
+    - field.storage.message.field_message_group_reference
     - message.template.group_notify_node
-id: message.group_notify_node.field_node_reference
-field_name: field_node_reference
+id: message.group_notify_node.field_message_group_reference
+field_name: field_message_group_reference
 entity_type: message
-bundle: group_notify_node
-label: 'Node reference'
+bundle: group_notify_message_group
+label: 'Message group reference'
 description: ''
-required: true
+# @todo set to true once ready with groups
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
@@ -20,8 +21,7 @@ settings:
   handler_settings:
     # @todo review bundles
     target_bundles:
-      article: article
-      page: page
+      role: role
     sort:
       field: _none
 third_party_settings: {  }

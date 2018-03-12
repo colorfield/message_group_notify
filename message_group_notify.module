@@ -61,3 +61,70 @@ function message_group_notify_entity_delete(EntityInterface $entity) {
   $subscriber = \Drupal::service('message_group_notify.entity_subscriber');
   $subscriber->onDelete($entity);
 }
+
+/**
+ * Return message_group_notify's settings.
+ *
+ * @param string $setting
+ *   One of the message_group_notify_available_settings(), e.g. 'per_node'.
+ *   If 'all' is passed, all available settings are returned.
+ * @param string $type_name
+ *   The name of the content type to return settings for.
+ *
+ * @return string|array
+ *   The value of the given setting or an array of all settings.
+ */
+function message_group_notify_get_settings($setting, $type_name) {
+  $config = \Drupal::configFactory()->getEditable('message_group_notify.settings');
+  $settings = unserialize($config->get('message_group_notify_node_type.' . $type_name));
+  if (empty($settings)) {
+    $settings = [];
+  }
+  $settings += message_group_notify_get_setting_defaults($type_name);
+
+  if ($setting == 'all') {
+    return $settings;
+  }
+
+  return isset($settings[$setting]) ? $settings[$setting] : NULL;
+}
+
+/**
+ * Save message_group_notify settings of a content type.
+ */
+function message_group_notify_set_settings($settings, $type_name) {
+  $config = \Drupal::configFactory()->getEditable('message_group_notify.settings');
+
+  // Do not store default values.
+  // @todo to review
+  foreach (message_group_notify_get_setting_defaults($type_name) as $setting => $default_value) {
+    if (isset($settings[$setting]) && $settings[$setting] == $default_value) {
+      unset($settings[$setting]);
+    }
+  }
+  $config->set('message_group_notify_node_type.' . $type_name, serialize($settings));
+  $config->save();
+}
+
+/**
+ * Return an array containing all available message_group_notify settings.
+ */
+function message_group_notify_available_settings() {
+  return [
+    'groups',
+    'send_mode',
+    'operations',
+  ];
+}
+
+/**
+ * Defines default values for settings.
+ */
+function message_group_notify_get_setting_defaults($type) {
+  $defaults = [];
+  $defaults['groups'] = [];
+  $defaults['send_mode'] = 'send_per_node';
+  $defaults['operations'] = ['create'];
+
+  return $defaults;
+}

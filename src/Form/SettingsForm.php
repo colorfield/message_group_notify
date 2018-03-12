@@ -65,22 +65,7 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'message_group_notify__settings';
-  }
-
-  /**
-   * Returns a list of content types.
-   *
-   * @return array
-   *   Content type labels indexed by machine name (content type id).
-   */
-  private function getContentTypes() {
-    $contentTypes = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
-    $result = [];
-    foreach ($contentTypes as $contentType) {
-      $result[$contentType->id()] = $contentType->label();
-    }
-    return $result;
+    return 'message_group_notify_settings';
   }
 
   /**
@@ -103,13 +88,6 @@ class SettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('group_types'),
     ];
 
-    $form['content_types'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Content types'),
-      '#description' => $this->t('Optionally limit notifications per content type. All if none selected.'),
-      '#options' => $this->getContentTypes(),
-      '#default_value' => $config->get('content_types'),
-    ];
     $form['test_mail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Test email'),
@@ -147,7 +125,6 @@ class SettingsForm extends ConfigFormBase {
 
     $this->config('message_group_notify.settings')
       ->set('group_types', $form_state->getValue('group_types'))
-      ->set('content_types', $form_state->getValue('content_types'))
       ->set('test_mail', $form_state->getValue('test_mail'))
       ->save();
   }

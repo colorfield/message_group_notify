@@ -1,0 +1,4 @@
+entity.node.message_group_notify:
+  route_name: entity.node.message_group_notify
+  group: node
+  title: 'Group Notify'

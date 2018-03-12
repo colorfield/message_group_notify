@@ -9,11 +9,24 @@ message_group_notify.settings:
   options:
     _admin_route: TRUE
 
-message_group_notify.node_message:
- path: '/node/{node}/messages'
+entity.node.message_group_notify:
+ path: '/node/{node}/message_group_notify'
  defaults:
    _controller: '\Drupal\message_group_notify\Controller\NodeMessageController::messages'
-   _title: 'Messages'
+   _title: 'Notify groups and view sent messages'
  requirements:
+   # @todo this controller should only be accessed when per_node setting is defined
    # @todo probably replace by 'adminster messages' or dedicated permission
    _permission: 'administer site configuration'
+ options:
+   _node_operation_route: TRUE
+   _admin_route: TRUE
+
+entity.node_type.message_group_notify:
+  path: '/admin/structure/types/manage/{node_type}/message_group_notify'
+  defaults:
+    _title: 'Message Group Notify'
+    _form: '\Drupal\message_group_notify\Form\NodeTypeSettingsForm'
+  requirements:
+    # @todo probably replace by 'adminster messages' or dedicated permission
+    _permission: 'administer site configuration'

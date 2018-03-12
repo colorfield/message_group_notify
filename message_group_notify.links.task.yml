@@ -1,5 +1,11 @@
-message_group_notify.node_message:
-  route_name: message_group_notify.node_message
-  title: 'Message'
+entity.node.message_group_notify:
+  route_name: entity.node.message_group_notify
   base_route: entity.node.canonical
-  weight: 100
+  title: 'Group notify'
+  weight: 99
+
+entity.node_type.message_group_notify_form:
+  route_name: entity.node_type.message_group_notify
+  base_route: entity.node_type.edit_form
+  title: 'Group notify'
+  weight: 99
