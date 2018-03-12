@@ -27,10 +27,9 @@ class NodeTypeSettingsForm extends FormBase {
 
     $form_state->setStorage($storage);
 
-    // Per node:
     $form['node'] = [
       '#type' => 'fieldset',
-      '#title' => t('Notification settings'),
+      '#title' => t('Content settings'),
       '#collapsible' => TRUE,
       '#description' => t('You can enable per content or per content type group notify settings. If <em>per content</em> is selected, messages will be sent on demand, per node. If per <em>content type</em> is selected, messages will be sent automatically for the selected operations.'),
     ];
@@ -42,10 +41,15 @@ class NodeTypeSettingsForm extends FormBase {
       '#default_value' => message_group_notify_get_settings('send_mode', $node_type),
     ];
 
-    $form['operations'] = [
+    $form['limit'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Notification limits'),
+      '#collapsible' => TRUE,
+      '#description' => t('Limits are set per content type or per node message notifications, depending on the selected send mode.'),
+    ];
+    $form['limit']['operations'] = [
       '#type' => 'checkboxes',
       '#title' => t('Operations'),
-      '#description' => t('Limits per content type or per node message notifications.'),
       '#options' => [
         'create' => t('Create'),
         'update' => t('Update'),
@@ -53,15 +57,23 @@ class NodeTypeSettingsForm extends FormBase {
       ],
       '#default_value' => message_group_notify_get_settings('operations', $node_type),
     ];
-
-    // @todo use states to show / hide this setting, review UX
-    $form['groups'] = [
+    $form['limit']['groups'] = [
       '#type' => 'select',
       '#title' => t('Groups'),
-      '#description' => t('Limits per content type or per node message notifications.'),
     // @todo get groups from groups types defined in the main settings form.
       '#options' => [1 => '@todo'],
       '#default_value' => message_group_notify_get_settings('groups', $node_type),
+    ];
+    $form['limit']['channels'] = [
+      '#type' => 'checkboxes',
+      '#title' => t('Channels'),
+      // @todo add options from plugins (e.g. Slack, ...)
+      // on site messages can be handled by the site builder via Views.
+      '#options' => [
+        'mail' => t('Mail'),
+        // 'pwa' => t('Progressive web app style'),.
+      ],
+      '#default_value' => message_group_notify_get_settings('channels', $node_type),
     ];
 
     $form['submit'] = [
@@ -71,7 +83,6 @@ class NodeTypeSettingsForm extends FormBase {
     ];
 
     return $form;
-    // Return parent::buildForm($form, $form_state);.
   }
 
   /**

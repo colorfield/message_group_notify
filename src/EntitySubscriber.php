@@ -82,8 +82,7 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
    * {@inheritdoc}
    */
   protected function onCallback($operation, EntityInterface $entity) {
-    // @todo this callback should be handled only if the configuration is per bundle, not per node
-    // $config = $this->configFactory->get('message_group_notify.settings');
+    $config = $this->configFactory->get('message_group_notify.settings');
     // drupal_set_message($entity->label() . ' ' . $operation);.
     if ($entity instanceof Node) {
       // Conflicts with contact_message.

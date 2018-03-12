@@ -140,6 +140,7 @@ function message_group_notify_available_settings() {
     'groups',
     'send_mode',
     'operations',
+    'channels',
   ];
 }
 
@@ -151,6 +152,7 @@ function message_group_notify_get_setting_defaults($type) {
   $defaults['groups'] = [];
   $defaults['send_mode'] = 'send_per_node';
   $defaults['operations'] = ['create'];
+  $defaults['channels'] = ['mail'];
 
   return $defaults;
 }

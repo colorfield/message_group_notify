@@ -25,7 +25,20 @@ Messages can be included in the weekly digest on the entity create/edit form.
 
 ## Configuration
 
-### Configure the Message view mode of Email 
+### Per content type
+
+For each content type, the following options are available:
+
+- **Send mode** per _node_ (default) or per _content type_. 
+You can enable per content or per content type group notify settings. 
+If per content is selected, messages will be sent on demand, per node. 
+If per content type is selected, messages will be sent automatically for the 
+selected operations.
+- **Operations** limits the message notification to create, update or 
+delete operations.
+- **Groups** limits the message notification to the selected groups. 
+
+### Message view mode of Email 
 
 - After enabling the module, head to 
 'Structure > Message templates > Manage display'.
@@ -35,10 +48,11 @@ Messages can be included in the weekly digest on the entity create/edit form.
 and Format to 'Label (No link)'.
 - Edit an entity and check your mail.
 
-### Configure the Message templates
+### Message templates
 
 - Optionally, edit the Message template with tokens or text to customize
-the messages available from /admin/content/messages.
+the messages available from /admin/content/messages and 
+/node/{node_id}/message_group_notify.
 
 ## Roadmap
 
