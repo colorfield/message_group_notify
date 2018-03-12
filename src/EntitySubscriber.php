@@ -2,11 +2,9 @@
 
 namespace Drupal\message_group_notify;
 
-use Drupal\message\Entity\Message;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\message_notify\MessageNotifier;
 use Drupal\node\Entity\Node;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -27,22 +25,22 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
    *
    * @var \Drupal\Core\Entity\EntityTypeManager
    */
-
   protected $entityTypeManager;
+
   /**
-   * Drupal\message_notify\MessageNotifier definition.
+   * Drupal\message_group_notify\MessageGroupNotifierInterface definition.
    *
-   * @var \Drupal\message_notify\MessageNotifier
+   * @var \Drupal\message_group_notify\MessageGroupNotifierInterface
    */
-  protected $messageNotifySender;
+  protected $messageGroupNotifySender;
 
   /**
    * Constructs a new EntitySubscriber object.
    */
-  public function __construct(ConfigFactory $config_factory, EntityTypeManager $entity_type_manager, MessageNotifier $message_notify_sender) {
+  public function __construct(ConfigFactory $config_factory, EntityTypeManager $entity_type_manager, MessageGroupNotifierInterface $message_group_notify_sender) {
     $this->configFactory = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
-    $this->messageNotifySender = $message_notify_sender;
+    $this->messageGroupNotifySender = $message_group_notify_sender;
   }
 
   /**
@@ -61,45 +59,47 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
    * {@inheritdoc}
    */
   public function onCreate(EntityInterface $entity) {
-    $this->onCallback('create', $entity);
+    $this->onCallback(MessageGroupNotifier::OPERATION_CREATE, $entity);
   }
 
   /**
    * {@inheritdoc}
    */
   public function onUpdate(EntityInterface $entity) {
-    $this->onCallback('update', $entity);
+    $this->onCallback(MessageGroupNotifier::OPERATION_UPDATE, $entity);
   }
 
   /**
    * {@inheritdoc}
    */
   public function onDelete(EntityInterface $entity) {
-    $this->onCallback('delete', $entity);
+    $this->onCallback(MessageGroupNotifier::OPERATION_DELETE, $entity);
   }
 
   /**
    * {@inheritdoc}
    */
   protected function onCallback($operation, EntityInterface $entity) {
-    $config = $this->configFactory->get('message_group_notify.settings');
-    // drupal_set_message($entity->label() . ' ' . $operation);.
     if ($entity instanceof Node) {
-      // Conflicts with contact_message.
-      // $message = $this->entityTypeManager->getStorage('message');.
-      $message = Message::create(['template' => 'group_notify_node', 'uid' => $entity->get('uid')]);
-      $message->set('field_node_reference', $entity);
-      // @todo set group reference
-      // @todo create MessageGroupType config entity and MessageGroup content entity
-      // $message->set('field_message_group_reference', $entity);
-      $message->set('field_published', $entity->isPublished());
-      $message->save();
+      // This callback is relevant only if the 'send_mode' setting for
+      // this entity node type is 'send_per_content_type'.
+      // Otherwise, when the default setting 'send_per_node' is set,
+      // this is delegated to a manual action.
+      // $config = $this->configFactory->get('message_group_notify.settings');.
+      $nodeTypeSettings = message_group_notify_get_settings('all', $entity->getEntityTypeId());
+      if ($nodeTypeSettings['send_mode'] === MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE) {
+        // Check then if the operation is in the scope.
+        if (in_array($operation, $nodeTypeSettings['operations'])) {
+          // @todo convert into MessageGroup content entity
+          $messageGroup = [
+            'groups' => $nodeTypeSettings['groups'],
+            'channels' => $nodeTypeSettings['channels'],
+            // 'mail' => 'john@doe.org',.
+          ];
+          $this->messageGroupNotifySender->send($entity, $messageGroup);
+        }
+      }
 
-      $params = [
-        'mail' => \Drupal::config('system.site')->get('mail'),
-      ];
-      $notifier = \Drupal::service('message_notify.sender');
-      $notifier->send($message, $params, 'email');
     }
   }
 

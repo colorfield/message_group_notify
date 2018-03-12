@@ -100,7 +100,8 @@ class NodeTypeSettingsForm extends FormBase {
       }
     }
     message_group_notify_set_settings($settings, $node_type);
-    drupal_set_message(t('Your changes have been saved.'));
+    $messenger = \Drupal::messenger();
+    $messenger->addMessage(t('Your changes have been saved.'));
   }
 
 }

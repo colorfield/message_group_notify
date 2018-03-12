@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
+use Drupal\message_group_notify\MessageGroupNotifierInterface;
 
 /**
  * Implements hook_help().
@@ -92,7 +93,7 @@ function message_group_notify_entity_delete(EntityInterface $entity) {
  * Return message_group_notify's settings.
  *
  * @param string $setting
- *   One of the message_group_notify_available_settings(), e.g. 'per_node'.
+ *   One of the message_group_notify_available_settings(), e.g. 'groups'.
  *   If 'all' is passed, all available settings are returned.
  * @param string $type_name
  *   The name of the content type to return settings for.
@@ -150,8 +151,8 @@ function message_group_notify_available_settings() {
 function message_group_notify_get_setting_defaults($type) {
   $defaults = [];
   $defaults['groups'] = [];
-  $defaults['send_mode'] = 'send_per_node';
-  $defaults['operations'] = ['create'];
+  $defaults['send_mode'] = MessageGroupNotifierInterface::SEND_MODE_NODE;
+  $defaults['operations'] = [MessageGroupNotifierInterface::OPERATION_CREATE];
   $defaults['channels'] = ['mail'];
 
   return $defaults;

@@ -78,20 +78,24 @@ class NodeMessageController extends ControllerBase {
    */
   private function buildHeader() {
     $header = [
-      'view_mode' => [
+      'display' => [
         'data' => $this->t('Message'),
+        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+      ],
+      'groups' => [
+        'data' => $this->t('Groups'),
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ],
       'channels' => [
         'data' => $this->t('Channels'),
-        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
-      ],
-      'created' => [
-        'data' => $this->t('Created'),
         'class' => [RESPONSIVE_PRIORITY_LOW],
       ],
       'author' => [
         'data' => $this->t('Author'),
+        'class' => [RESPONSIVE_PRIORITY_LOW],
+      ],
+      'created' => [
+        'data' => $this->t('Created'),
         'class' => [RESPONSIVE_PRIORITY_LOW],
       ],
     ];
@@ -120,11 +124,12 @@ class NodeMessageController extends ControllerBase {
     $subject = $viewBuilder->view($entity, 'default');
     /** @var \Drupal\contact\Entity\Message $entity */
     return [
-      'view_mode' => render($subject),
-    // Get channels.
+      'display' => render($subject),
+      // @todo get channels and groups.
+      'groups' => '@todo',
       'channels' => '@todo',
-      'created' => $this->dateFormatter->format($entity->getCreatedTime(), 'short'),
       'author' => $entity->getOwner()->label(),
+      'created' => $this->dateFormatter->format($entity->getCreatedTime(), 'short'),
     ];
   }
 
@@ -134,12 +139,13 @@ class NodeMessageController extends ControllerBase {
    * Builds the entity listing as renderable array for table.html.twig.
    */
   public function renderTable($messages) {
-    // @todo composition with entity list builder
+    // @todo composition with entity list builder.
     $build['table'] = [
       '#type' => 'table',
       '#header' => $this->buildHeader(),
       '#title' => $this->t('Messages'),
       '#rows' => [],
+      // @todo empty should contain a call to action.
       '#empty' => $this->t('There is no @label sent yet.', ['@label' => $this->storage->getEntityTypeId()]),
       '#cache' => [
         'contexts' => $this->storage->getEntityType()->getListCacheContexts(),
@@ -180,9 +186,13 @@ class NodeMessageController extends ControllerBase {
     $this->storage = $this->entityTypeManager->getStorage('message');
     $messages = $this->loadMessages($node);
 
+    $nodeEntity = $this->entityTypeManager->getStorage('node')->load($node);
+    $nodeTypeSettings = message_group_notify_get_settings('all', $nodeEntity->getEntityTypeId());
+
+    // @todo set render keys
     return [
+      // 'send_message_form' => \Drupal::formBuilder()->getForm(\Drupal\message_group_notify\Form\NodeMessageForm::class),
       'messages_table' => $this->renderTable($messages),
-      'send_message_form' => '',
     ];
   }
 
