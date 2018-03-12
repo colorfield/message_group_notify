@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -14,6 +15,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function message_group_notify_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     // Main module help for the message_group_notify module.
+    // @todo add routes
     case 'help.page.message_group_notify':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
@@ -22,6 +24,30 @@ function message_group_notify_help($route_name, RouteMatchInterface $route_match
 
     default:
   }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function message_group_notify_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  $info = $entity->getEntityType();
+
+  if ($info->getBundleOf() == 'node') {
+    $account = \Drupal::currentUser();
+
+    if ($account->hasPermission('administer nodes') && $account->hasPermission('administer content types')) {
+      $operations['message-group-notify'] = [
+        'title' => t('Group notify'),
+        'weight' => 99,
+        'url' => Url::fromRoute('entity.node_type.message_group_notify', [
+          'node_type' => $entity->id(),
+        ]),
+      ];
+    }
+  }
+
+  return $operations;
 }
 
 /**
