@@ -79,10 +79,11 @@ class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Group types'),
       '#description' => $this->t('Enabled group types that will be exposed on entity create or edit form.'),
       '#options' => [
-        'role' => $this->t('Role'),
+        'user_role' => $this->t('Role'),
         'group' => $this->t('Group'),
-        'mailchimp' => $this->t('Mailchimp'),
-        'civicrm' => $this->t('CiviCRM'),
+    // Not an entity type.
+        'mailchimp_list' => $this->t('Mailchimp list'),
+        'civicrm_group' => $this->t('CiviCRM group'),
       ],
       '#required' => TRUE,
       '#default_value' => $config->get('group_types'),
@@ -116,13 +117,19 @@ class SettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $groupTypes = $form_state->getValue('group_types');
-    if (!empty($groupTypes['mailchimp']) && !$this->moduleHandler->moduleExists('mailchimp')) {
+
+    // Temporary message during development.
+    if (!empty($groupTypes['mailchimp_list']) || !empty($groupTypes['group']) || !empty($groupTypes['civicrm_group'])) {
+      $form_state->setErrorByName('group_types', $this->t('Only the <strong>Role</strong> group type is currently being implemented.'));
+    }
+
+    if (!empty($groupTypes['mailchimp_list']) && !$this->moduleHandler->moduleExists('mailchimp_list')) {
       $form_state->setErrorByName('group_types', $this->t('Mailchimp module needs to be installed.'));
     }
     if (!empty($groupTypes['group']) && !$this->moduleHandler->moduleExists('group')) {
       $form_state->setErrorByName('group_types', $this->t('Group module needs to be installed.'));
     }
-    if (!empty($groupTypes['civicrm']) && !$this->moduleHandler->moduleExists('civicrm')) {
+    if (!empty($groupTypes['civicrm_group']) && !$this->moduleHandler->moduleExists('civicrm_group')) {
       $form_state->setErrorByName('group_types', $this->t('CiviCRM module needs to be installed.'));
     }
     parent::validateForm($form, $form_state);

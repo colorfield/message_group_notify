@@ -1,5 +1,5 @@
 group_types:
-  - role
+  - user_role
 status_message:
   - on_failure
 test_mail: "admin@example.com"

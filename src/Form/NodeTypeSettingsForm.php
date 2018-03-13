@@ -27,6 +27,16 @@ class NodeTypeSettingsForm extends FormBase {
 
     $form_state->setStorage($storage);
 
+    $messageGroupNotifier = \Drupal::service('message_group_notify.sender');
+    $groups = $messageGroupNotifier->getGroups();
+    // @todo group options can be delimited with group types
+    // @todo limit group options from the system wide configuration
+    $groupOptions = [];
+    foreach ($groups as $group) {
+      // @todo use group content entity
+      $groupOptions[$group->id()] = $group->label();
+    }
+
     $form['node'] = [
       '#type' => 'fieldset',
       '#title' => t('Content settings'),
@@ -58,10 +68,11 @@ class NodeTypeSettingsForm extends FormBase {
       '#default_value' => message_group_notify_get_settings('operations', $node_type),
     ];
     $form['limit']['groups'] = [
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#title' => t('Groups'),
-    // @todo get groups from groups types defined in the main settings form.
-      '#options' => [1 => '@todo'],
+      // @todo get groups from groups types defined in the main settings form.
+      // Currently getting roles for testing.
+      '#options' => $groupOptions,
       '#default_value' => message_group_notify_get_settings('groups', $node_type),
     ];
     $form['limit']['channels'] = [

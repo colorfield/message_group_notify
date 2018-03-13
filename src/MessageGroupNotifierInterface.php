@@ -3,6 +3,7 @@
 namespace Drupal\message_group_notify;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Interface MessageGroupNotifierInterface.
@@ -18,6 +19,55 @@ interface MessageGroupNotifierInterface {
   const OPERATION_UPDATE = 'update';
 
   const OPERATION_DELETE = 'delete';
+
+  /**
+   * Returns the list of group types from the system wide configuration.
+   *
+   * @return array
+   *   List of group type strings.
+   */
+  public function getGroupTypes();
+
+  /**
+   * Returns a list of group entities for a group type.
+   *
+   * @param string $group_type
+   *   Group type.
+   *
+   * @return array
+   *   List of group entities.
+   */
+  public function getGroupsFromGroupType($group_type);
+
+  /**
+   * Returns a list of group entities for all group types.
+   *
+   * @return array
+   *   List of group entities.
+   */
+  public function getGroups();
+
+  /**
+   * Returns a list of distinct contact entities for a group type.
+   *
+   * @param string $group_type
+   *   Group type.
+   *
+   * @return array
+   *   List of contact entities
+   */
+  public function getContactsFromGroupType($group_type);
+
+  /**
+   * Returns a list of distinct contact entities for all group types.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $group
+   *   Group entity.
+   *
+   * @return array
+   *   List of contact entities
+   */
+  public function getContactsFromGroup(EntityInterface $group);
 
   /**
    * Process and send a message to groups.

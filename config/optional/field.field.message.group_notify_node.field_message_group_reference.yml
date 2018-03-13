@@ -21,7 +21,7 @@ settings:
   handler_settings:
     # @todo review bundles
     target_bundles:
-      role: role
+      user_role: user_role
     sort:
       field: _none
 third_party_settings: {  }

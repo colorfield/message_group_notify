@@ -3,6 +3,7 @@
 namespace Drupal\message_group_notify;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\message\Entity\Message;
 use Drupal\message\MessageInterface;
 use Drupal\message_notify\Exception\MessageNotifyException;
@@ -48,6 +49,67 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
+  public function getGroupTypes() {
+    // @todo create MessageGroupType config entity
+    $config = $this->configFactory->get('message_group_notify.settings');
+    return $config->get('group_types');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupsFromGroupType($group_type) {
+    // @todo handle exception for non entity type like Mailchimp lists
+    $groups = [];
+    if ($this->entityTypeManager->hasDefinition($group_type)) {
+      $groups = $this->entityTypeManager->getStorage($group_type)->loadMultiple();
+    }
+    else {
+      $messenger = \Drupal::messenger();
+      $messenger->addMessage(t('Entity type @entity_type_id is not found.', ['@entity_type_id' => $group_type]), 'error');
+    }
+    return $groups;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroups() {
+    // @todo create MessageGroup content entity
+    // @todo get other groups from group types currently working with roles only
+    $groupTypes = $this->getGroupTypes();
+    $groups = [];
+    foreach ($groupTypes as $groupType) {
+      if ($groupType !== 0) {
+        foreach ($this->getGroupsFromGroupType($groupType) as $group) {
+          $groups[] = $group;
+        }
+      }
+    }
+    return $groups;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContactsFromGroupType($group_type) {
+    // @todo create MessageContact content entity
+    $contacts = [];
+    return $contacts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContactsFromGroup(EntityInterface $group) {
+    // @todo create MessageContact content entity
+    $contacts = [];
+    return $contacts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function send(ContentEntityInterface $entity, array $message_group) {
     $result = FALSE;
     $messageData = [
@@ -88,7 +150,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         if (!$result && !empty($statusMessage['on_failure'])) {
           // @todo be more specific here, the error cause can be roughly missing subject or issue with smtp
           $messenger = \Drupal::messenger();
-          $messenger->addMessage('An error occurred while sending your message.', 'error');
+          $messenger->addMessage('The message has been created but an error occurred while sending it by mail.', 'error');
         }
       }
       catch (MessageNotifyException $exception) {
