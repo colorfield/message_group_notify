@@ -37,10 +37,10 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
   /**
    * Constructs a new EntitySubscriber object.
    */
-  public function __construct(ConfigFactory $config_factory, EntityTypeManager $entity_type_manager, MessageGroupNotifierInterface $message_group_notify_sender) {
-    $this->configFactory = $config_factory;
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(MessageGroupNotifierInterface $message_group_notify_sender, EntityTypeManager $entity_type_manager, ConfigFactory $config_factory) {
     $this->messageGroupNotifySender = $message_group_notify_sender;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->configFactory = $config_factory;
   }
 
   /**
@@ -86,7 +86,7 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
       // Otherwise, when the default setting 'send_per_node' is set,
       // this is delegated to a manual action.
       // $config = $this->configFactory->get('message_group_notify.settings');.
-      $nodeTypeSettings = message_group_notify_get_settings('all', $entity->getEntityTypeId());
+      $nodeTypeSettings = message_group_notify_get_settings('all', $entity->bundle());
       if ($nodeTypeSettings['send_mode'] === MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE) {
         // Check then if the operation is in the scope.
         if (in_array($operation, $nodeTypeSettings['operations'])) {

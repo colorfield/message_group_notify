@@ -1,8 +1,7 @@
 services:
   message_group_notify.entity_subscriber:
     class: Drupal\message_group_notify\EntitySubscriber
-    arguments: ['@config.factory', '@entity_type.manager', '@message_group_notify.sender']
+    arguments: ['@message_group_notify.sender', '@entity_type.manager', '@config.factory']
   message_group_notify.sender:
     class: Drupal\message_group_notify\MessageGroupNotifier
-    arguments: ['@message_notify.sender', '@entity_type.manager']
-
+    arguments: ['@message_notify.sender', '@entity_type.manager', '@config.factory']

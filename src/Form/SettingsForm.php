@@ -33,9 +33,9 @@ class SettingsForm extends ConfigFormBase {
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-      EntityTypeManager $entity_type_manager,
-      ModuleHandler $module_handler
-    ) {
+    EntityTypeManager $entity_type_manager,
+    ModuleHandler $module_handler
+  ) {
     parent::__construct($config_factory);
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
@@ -88,6 +88,17 @@ class SettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('group_types'),
     ];
 
+    $form['status_message'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Display a confirmation message'),
+      '#description' => $this->t('Show a status once the message has been sent.'),
+      '#options' => [
+        'on_success' => $this->t('On success'),
+        'on_failure' => $this->t('On failure'),
+      ],
+      '#default_value' => $config->get('status_message'),
+    ];
+    // @todo add optional confirmation before sending
     $form['test_mail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Test email'),
@@ -108,10 +119,10 @@ class SettingsForm extends ConfigFormBase {
     if (!empty($groupTypes['mailchimp']) && !$this->moduleHandler->moduleExists('mailchimp')) {
       $form_state->setErrorByName('group_types', $this->t('Mailchimp module needs to be installed.'));
     }
-    if (!empty($groupTypes['group'])  && !$this->moduleHandler->moduleExists('group')) {
+    if (!empty($groupTypes['group']) && !$this->moduleHandler->moduleExists('group')) {
       $form_state->setErrorByName('group_types', $this->t('Group module needs to be installed.'));
     }
-    if (!empty($groupTypes['civicrm'])  && !$this->moduleHandler->moduleExists('civicrm')) {
+    if (!empty($groupTypes['civicrm']) && !$this->moduleHandler->moduleExists('civicrm')) {
       $form_state->setErrorByName('group_types', $this->t('CiviCRM module needs to be installed.'));
     }
     parent::validateForm($form, $form_state);
@@ -125,6 +136,7 @@ class SettingsForm extends ConfigFormBase {
 
     $this->config('message_group_notify.settings')
       ->set('group_types', $form_state->getValue('group_types'))
+      ->set('status_message', $form_state->getValue('status_message'))
       ->set('test_mail', $form_state->getValue('test_mail'))
       ->save();
   }

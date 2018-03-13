@@ -4,7 +4,8 @@ description: Notifies groups on entity creation or update.
 core: 8.x
 package: Message
 dependencies:
- - message
- - message_notify
- - token
- - node
+ - drupal:system (>= 8.5)
+ - drupal:message
+ - drupal:message_notify
+ - drupal:token
+ - drupal:node

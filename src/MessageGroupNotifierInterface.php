@@ -22,7 +22,7 @@ interface MessageGroupNotifierInterface {
   /**
    * Process and send a message to groups.
    *
-   * @param ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity that is the subject of the message.
    * @param array $message_group
    *   The message group values @todo convert into MessageGroup content entity.
