@@ -25,9 +25,15 @@ Messages can be included in the weekly digest on the entity create/edit form.
 
 ## Configuration
 
-### Per content type
+### System wide
 
-For each content type, the following options are available:
+On /admin/config/message/message_group_notify
+
+- **Group types**, current options are Role, Group, Mailchimp, CiviCRM.
+- **Optional status message**, on success and on failure.
+- **Test email**
+
+### Per content type
 
 - **Send mode** per _node_ (default) or per _content type_. 
 You can enable per content or per content type group notify settings. 
@@ -36,7 +42,8 @@ If per content type is selected, messages will be sent automatically for the
 selected operations.
 - **Operations** limits the message notification to create, update or 
 delete operations.
-- **Groups** limits the message notification to the selected groups. 
+- **Groups** limits the message notification to the selected groups.
+- **Channels** limits the message notification to mail channel, other channels to be added. 
 
 ### Message view mode of Email 
 
