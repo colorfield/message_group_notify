@@ -3,7 +3,6 @@
 namespace Drupal\message_group_notify;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Interface MessageGroupNotifierInterface.
@@ -35,7 +34,7 @@ interface MessageGroupNotifierInterface {
    *   Group type.
    *
    * @return array
-   *   List of group entities.
+   *   List of MessageGroup entities.
    */
   public function getGroupsFromGroupType($group_type);
 
@@ -43,7 +42,7 @@ interface MessageGroupNotifierInterface {
    * Returns a list of group entities for all group types.
    *
    * @return array
-   *   List of group entities.
+   *   List of MessageGroup entities.
    */
   public function getGroups();
 
@@ -54,20 +53,20 @@ interface MessageGroupNotifierInterface {
    *   Group type.
    *
    * @return array
-   *   List of contact entities
+   *   List of MessageContact entities.
    */
   public function getContactsFromGroupType($group_type);
 
   /**
-   * Returns a list of distinct contact entities for all group types.
+   * Returns a list of distinct contact entities for a list of MessageGroup.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $group
-   *   Group entity.
+   * @param array $groups
+   *   List of MessageGroup entities.
    *
    * @return array
-   *   List of contact entities
+   *   List of MessageContact entities.
    */
-  public function getContactsFromGroup(EntityInterface $group);
+  public function getContactsFromGroups(array $groups);
 
   /**
    * Process and send a message to groups.
@@ -76,10 +75,12 @@ interface MessageGroupNotifierInterface {
    *   The entity that is the subject of the message.
    * @param array $message_group
    *   The message group values @todo convert into MessageGroup content entity.
+   * @param bool $test
+   *   Indicates if this is a test message.
    *
    * @return bool
    *   Sent status.
    */
-  public function send(ContentEntityInterface $entity, array $message_group);
+  public function send(ContentEntityInterface $entity, array $message_group, $test = FALSE);
 
 }

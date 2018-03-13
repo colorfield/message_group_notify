@@ -41,7 +41,7 @@ class NodeTypeSettingsForm extends FormBase {
       '#type' => 'fieldset',
       '#title' => t('Content settings'),
       '#collapsible' => TRUE,
-      '#description' => t('You can enable per content or per content type group notify settings. If <em>per content</em> is selected, messages will be sent on demand, per node. If per <em>content type</em> is selected, messages will be sent automatically for the selected operations.'),
+      '#description' => t('You can enable per <em>node</em> or per <em>content type</em> group notify settings. If <em>node</em> is selected, messages will be sent manually from the <em>Group notify</em> tab of a node. If per <em>content type</em> is selected, messages will be sent automatically for the selected operations.'),
     ];
     $form['node']['send_mode'] = [
       '#type' => 'radios',

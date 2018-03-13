@@ -3,13 +3,13 @@
 namespace Drupal\message_group_notify;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\message\Entity\Message;
 use Drupal\message\MessageInterface;
 use Drupal\message_notify\Exception\MessageNotifyException;
 use Drupal\message_notify\MessageNotifier;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\user\Entity\User;
 
 /**
  * Class MessageGroupNotifier.
@@ -94,6 +94,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    */
   public function getContactsFromGroupType($group_type) {
     // @todo create MessageContact content entity
+    // @todo implement
     $contacts = [];
     return $contacts;
   }
@@ -101,16 +102,76 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function getContactsFromGroup(EntityInterface $group) {
-    // @todo create MessageContact content entity
+  public function getContactsFromGroups(array $groups) {
+    // @todo create MessageContact content entity, currently possible id conflict among MessageGroupTypes
+    // @todo caching
     $contacts = [];
+    // The MessageGroup entity should hold a reference to the MessageGroupType
+    // allowing to use the right storage.
+    // Currently limiting the storage to user_role and user entities.
+    $userStorage = $this->entityTypeManager->getStorage('user');
+    foreach ($groups as $group) {
+      $userIds = $userStorage->getQuery()
+        ->condition('status', 1)
+        ->condition('roles', $group)
+        ->execute();
+      $users = $userStorage->loadMultiple($userIds);
+      // @todo reduce duplicate with comparable interface and use MessageContact entity
+      foreach ($users as $user) {
+        $contacts[$user->id()] = $user;
+      }
+    }
     return $contacts;
+  }
+
+  /**
+   * Process and send a message to groups contacts.
+   *
+   * @param \Drupal\message\Entity\Message $message
+   *   The message entity.
+   * @param array $message_group
+   *   The message group values @todo convert into MessageGroup content entity.
+   * @param array $contacts
+   *   List of MessageContact entities.
+   * @param string $notifier_name
+   *   The notifier.
+   *
+   * @return bool
+   *   Sent status, TRUE if all messages sent.
+   */
+  private function sendToContacts(Message $message, array $message_group, array $contacts, $notifier_name) {
+    // @todo handle from mail
+    // @todo review https://www.drupal.org/project/message_notify/issues/2907045
+    // @todo report fails
+    $fails = [];
+    foreach ($contacts as $contact) {
+      // @todo create MessageContact content entity
+      // Currently limiting to User entity.
+      if ($contact instanceof User) {
+        try {
+          $params = [
+            'mail' => $contact->getEmail(),
+          ];
+          $singleResult = $this->messageNotifySender->send($message, $params, 'email');
+          if (!$singleResult) {
+            $fails[] = $contact;
+          }
+        }
+        catch (MessageNotifyException $exception) {
+          // @todo log
+          $messenger = \Drupal::messenger();
+          $messenger->addMessage($exception->getMessage(), 'error');
+          $fails[] = $contact;
+        }
+      }
+    }
+    return empty($fails);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function send(ContentEntityInterface $entity, array $message_group) {
+  public function send(ContentEntityInterface $entity, array $message_group, $test = FALSE) {
     $result = FALSE;
     $messageData = [
       'template' => 'group_notify_node',
@@ -129,23 +190,38 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       // $message_group['groups']);
       $message->save();
 
-      // @todo handle channels here
-      // Set sender email.
-      // Per message with a fallback to the site mail.
-      $fromEmail = !empty($message_group['mail']) ? $message_group['mail'] : \Drupal::config('system.site')->get('mail');
-      $params = [
-        'mail' => $fromEmail,
-      ];
+      // @todo handle channels here: mail, pwa, sms, ...
+      $config = $this->configFactory->get('message_group_notify.settings');
 
       try {
-        $result = $this->messageNotifySender->send($message, $params, 'email');
-        $config = $this->configFactory->get('message_group_notify.settings');
-        $statusMessage = $config->get('status_message');
-        // Show a status message on success if in configuration.
-        if ($result && !empty($statusMessage['on_success'])) {
-          $messenger = \Drupal::messenger();
-          $messenger->addMessage(t('Your message has been sent.'));
+        // Send a test email.
+        if ($test) {
+          // Per message with a fallback to the test mail from
+          // the site wide configuration.
+          $toEmail = !empty($message_group['to_mail']) ? $message_group['to_mail'] : $config->get('test_mail');
+          $params = [
+            'mail' => $toEmail,
+          ];
+          $result = $this->messageNotifySender->send($message, $params, 'email');
+          // Send email to contacts from groups.
         }
+        else {
+          $contacts = $this->getContactsFromGroups($message_group['groups']);
+          $result = $this->sendToContacts($message, $message_group, $contacts, 'email');
+        }
+
+        // Show a status message on success if in configuration.
+        $statusMessage = $config->get('status_message');
+        if ($result && !empty($statusMessage['on_success'])) {
+          $implodedGroups = implode(', ', $message_group['groups']);
+          $messenger = \Drupal::messenger();
+          $messenger->addMessage(
+            t('Your message has been sent to the following groups: <em>@groups</em>.', [
+              '@groups' => $implodedGroups,
+            ])
+          );
+        }
+
         // Show a status message on failure if in configuration.
         if (!$result && !empty($statusMessage['on_failure'])) {
           // @todo be more specific here, the error cause can be roughly missing subject or issue with smtp
