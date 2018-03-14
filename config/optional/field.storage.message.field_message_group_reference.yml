@@ -1,0 +1,19 @@
+uuid: f4c26ee6-747a-493b-a739-7482bac41f50
+langcode: en
+status: true
+dependencies:
+  module:
+    - message
+id: message.field_message_group_reference
+field_name: field_message_group_reference
+entity_type: message
+type: entity_reference
+settings:
+  # @todo review target type
+  target_type:
+    - user_role
+module: entity_reference
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
