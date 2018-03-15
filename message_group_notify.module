@@ -9,6 +9,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\message_group_notify\MessageGroupNotifierInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
  * Implements hook_help().
@@ -24,6 +26,50 @@ function message_group_notify_help($route_name, RouteMatchInterface $route_match
       return $output;
 
     default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function message_group_notify_theme() {
+  return [
+    'entity_group_notify' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for entity group notify templates.
+ *
+ * Default template: entity-group-notify.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing the components of the page
+ *     - #entity: The entity that is the subject of the Message.
+ *     - #send_message_form: A form to send the Message to MessageGroups.
+ *     - #messages_table: The table of already sent messages for this entity.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_entity_group_notify(array &$variables) {
+  $variables['entity'] = $variables['elements']['#entity'];
+  $variables['send_message_form'] = $variables['elements']['#send_message_form'];
+  $variables['messages_table'] = $variables['elements']['#messages_table'];
+
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  $entity = $variables['entity'];
+  if ($entity instanceof ContentEntityInterface) {
+    $variables['title'] = $variables['entity']->label();
+  }
+
+  // @todo add helper variables.
+
+  // Helpful $content variable for templates.
+  $variables['content'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
   }
 }
 
@@ -49,17 +95,6 @@ function message_group_notify_entity_operation(EntityInterface $entity) {
   }
 
   return $operations;
-}
-
-/**
- * Implements hook_theme().
- */
-function message_group_notify_theme() {
-  return [
-    'message_group_notify' => [
-      'render element' => 'children',
-    ],
-  ];
 }
 
 /**

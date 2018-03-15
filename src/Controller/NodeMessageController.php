@@ -2,6 +2,7 @@
 
 namespace Drupal\message_group_notify\Controller;
 
+use Drupal\message_group_notify\Form\NodeMessageForm;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityInterface;
@@ -191,8 +192,10 @@ class NodeMessageController extends ControllerBase {
 
     // @todo set render keys
     return [
-      // 'send_message_form' => \Drupal::formBuilder()->getForm(\Drupal\message_group_notify\Form\NodeMessageForm::class),
-      'messages_table' => $this->renderTable($messages),
+      '#theme' => 'entity_group_notify',
+      '#entity' => $nodeEntity,
+      '#send_message_form' => \Drupal::formBuilder()->getForm(NodeMessageForm::class),
+      '#messages_table' => $this->renderTable($messages),
     ];
   }
 

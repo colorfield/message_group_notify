@@ -1,0 +1,21 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display the entity group notify page.
+ *
+ * Available variables:
+ * - title: The entity title.
+ * - entity: The entity that is the subject of the Message.
+ * - send_message_form: A form to send the Message to MessageGroups.
+ * - messages_table: The table of already sent messages for this entity.
+ *
+ * @see template_preprocess_entity_group_notify()
+ *
+ * @ingroup themeable
+ */
+#}
+<div{{ attributes }}>
+  <h1>{{ title }}</h1>
+  {{ send_message_form }}
+  {{ messages_table }}
+</div>

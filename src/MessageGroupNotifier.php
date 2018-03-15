@@ -96,6 +96,8 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
     // @todo create MessageContact content entity
     // @todo implement
     $contacts = [];
+    $messenger = \Drupal::messenger();
+    $messenger->addMessage(t('MessageGroupNotifier::getContactsFromGroupType() is not implemented yet.'), 'error');
     return $contacts;
   }
 
@@ -127,7 +129,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * Process and send a message to groups contacts.
    *
-   * @param \Drupal\message\Entity\Message $message
+   * @param \Drupal\message\MessageInterface $message
    *   The message entity.
    * @param array $message_group
    *   The message group values @todo convert into MessageGroup content entity.
@@ -139,7 +141,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    * @return bool
    *   Sent status, TRUE if all messages sent.
    */
-  private function sendToContacts(Message $message, array $message_group, array $contacts, $notifier_name) {
+  private function sendToContacts(MessageInterface $message, array $message_group, array $contacts, $notifier_name) {
     // @todo handle from mail
     // @todo review https://www.drupal.org/project/message_notify/issues/2907045
     // @todo report fails
@@ -203,8 +205,9 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
             'mail' => $toEmail,
           ];
           $result = $this->messageNotifySender->send($message, $params, 'email');
-          // Send email to contacts from groups.
+
         }
+        // Send email to contacts from groups.
         else {
           $contacts = $this->getContactsFromGroups($message_group['groups']);
           $result = $this->sendToContacts($message, $message_group, $contacts, 'email');
@@ -213,11 +216,10 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         // Show a status message on success if in configuration.
         $statusMessage = $config->get('status_message');
         if ($result && !empty($statusMessage['on_success'])) {
-          $implodedGroups = implode(', ', $message_group['groups']);
           $messenger = \Drupal::messenger();
           $messenger->addMessage(
             t('Your message has been sent to the following groups: <em>@groups</em>.', [
-              '@groups' => $implodedGroups,
+              '@groups' => implode(', ', $message_group['groups']),
             ])
           );
         }

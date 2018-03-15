@@ -24,7 +24,7 @@ For other features see the use case diagram below.
 Users can then manage content subscription preferences locally (see roadmap).
 Users can unsubscribe globally to a group (e.g. Mailchimp mailing list, Group).
 
-![Message Group Notify entities](documentation/diagram/class/message_group_notify_entities.png?raw=true "Message Group Notify entities")
+-![Message Group Notify entities](documentation/diagram/class/message_group_notify_entities.png?raw=true "Message Group Notify entities")
 
 ## Primary use case
 
@@ -93,7 +93,26 @@ can be defined via Message Notify).
 
 ### Mail templates
 
-@todo document
+There are several options, here is an approach.
+
+- Define a 'Mail' view mode for content in /admin/structure/display-modes/view.
+- Activate this view mode for the content types that are the subject of
+notification message (e.g. /admin/structure/types/manage/article/display).
+- Set the desired field per content type
+(e.g. /admin/structure/types/manage/article/display/mail).
+- Configure then this view mode for the 'Notify - Email body' Message view mode
+(/admin/structure/message/manage/group_notify_node/display/mail_body).
+
+A default theme implementation based on
+[Zurb](https://foundation.zurb.com/emails/templates/hero.html) is on its way,
+you can still provide your own theme implementation with one of this template:
+
+```
+message--group-notify-node--mail-body.html.twig
+message--group-notify-node.html.twig
+message--mail-body.html.twig
+message.html.twig
+```
 
 ### Message templates
 

@@ -1,0 +1,195 @@
+{#
+/**
+ * @file
+ * Default theme implementation for message entities.
+ *
+ * Available variables:
+ * - $content: An array of comment items. Use render($content) to print them all, or
+ *   print a subset such as render($content['field_example']). Use
+ *   hide($content['field_example']) to temporarily suppress the printing of a
+ *   given element.
+ * - $title: The (sanitized) entity label.
+ * - $url: Direct url of the current entity if specified.
+ * - $page: Flag for the full page state.
+ * - $classes: String of classes that can be used to style contextually through
+ *   CSS. It can be manipulated through the variable $classes_array from
+ *   preprocess functions. By default the following classes are available, where
+ *   the parts enclosed by {} are replaced by the appropriate values:
+ *   - entity-{ENTITY_TYPE}
+ *   - {ENTITY_TYPE}-{BUNDLE}
+ *
+ * Other variables:
+ * - $classes_array: Array of html class attribute values. It is flattened
+ *   into a string within the variable $classes.
+ *
+ * @see template_preprocess()
+ * @see template_preprocess_message()
+ * @see template_process()
+ */
+#}
+<table class="body" data-made-with-foundation="">
+  <tr>
+    <td class="float-center" align="center" valign="top">
+      <center data-parsed="">
+        <table align="center" class="wrapper header float-center">
+          <tr>
+            <td class="wrapper-inner">
+              <table align="center" class="container">
+                <tbody>
+                <tr>
+                  <td>
+                    <table class="row collapse">
+                      <tbody>
+                      <tr>
+                        <th class="small-6 large-6 columns first">
+                          <table>
+                            <tr>
+                              <th> <img src="http://placehold.it/200x50/663399"> </th>
+                            </tr>
+                          </table>
+                        </th>
+                        <th class="small-6 large-6 columns last">
+                          <table>
+                            <tr>
+                              <th>
+                                <p class="text-right">HERO</p>
+                              </th>
+                            </tr>
+                          </table>
+                        </th>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <table align="center" class="container float-center">
+          <tbody>
+          <tr>
+            <td>
+              <table class="spacer">
+                <tbody>
+                <tr>
+                  <td height="16px" style="font-size:16px;line-height:16px;">&#xA0;</td>
+                </tr>
+                </tbody>
+              </table>
+              <table class="row">
+                <tbody>
+                <tr>
+                  <th class="small-12 large-12 columns first last">
+                    <table>
+                      <tr>
+                        <th>
+                          <h1>Hi, Elijah Baily</h1>
+                          <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi impedit sapiente delectus molestias quia.</p> <img src="http://placehold.it/580x300" alt="">
+                          <table class="callout">
+                            <tr>
+                              <th class="callout-inner primary">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam assumenda, praesentium qui vitae voluptate dolores. <a href="#">Click it!</a></p>
+                              </th>
+                              <th class="expander"></th>
+                            </tr>
+                          </table>
+                          <h2>Title Ipsum <small>This is a note.</small></h2>
+                          <div{{ attributes }}>
+                              {{ content }}
+                          </div>
+                          <table class="button large secondary">
+                            <tr>
+                              <td>
+                                <table>
+                                  <tr>
+                                    <td><a href="#">Click Me!</a></td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </th>
+                        <th class="expander"></th>
+                      </tr>
+                    </table>
+                  </th>
+                </tr>
+                </tbody>
+              </table>
+              <table class="wrapper secondary" align="center">
+                <tr>
+                  <td class="wrapper-inner">
+                    <table class="spacer">
+                      <tbody>
+                      <tr>
+                        <td height="16px" style="font-size:16px;line-height:16px;">&#xA0;</td>
+                      </tr>
+                      </tbody>
+                    </table>
+                    <table class="row">
+                      <tbody>
+                      <tr>
+                        <th class="small-12 large-6 columns first">
+                          <table>
+                            <tr>
+                              <th>
+                                <h5>Connect With Us:</h5>
+                                <table align="left" class="menu vertical">
+                                  <tr>
+                                    <td>
+                                      <table>
+                                        <tr>
+                                          <th style="text-align: left;" class="menu-item float-center"><a href="#">Twitter</a></th>
+                                          <th style="text-align: left;" class="menu-item float-center"><a href="#">Facebook</a></th>
+                                          <th style="text-align: left;" class="menu-item float-center"><a href="#">Google +</a></th>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </th>
+                            </tr>
+                          </table>
+                        </th>
+                        <th class="small-12 large-6 columns last">
+                          <table>
+                            <tr>
+                              <th>
+                                <h5>Contact Info:</h5>
+                                <p>Phone: 408-341-0600</p>
+                                <p>Email: <a href="mailto:foundation@zurb.com">foundation@zurb.com</a></p>
+                              </th>
+                            </tr>
+                          </table>
+                        </th>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <center data-parsed="">
+                <table align="center" class="menu float-center">
+                  <tr>
+                    <td>
+                      <table>
+                        <tr>
+                          <th class="menu-item float-center"><a href="#">Terms</a></th>
+                          <th class="menu-item float-center"><a href="#">Privacy</a></th>
+                          <th class="menu-item float-center"><a href="#">Unsubscribe</a></th>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </center>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
