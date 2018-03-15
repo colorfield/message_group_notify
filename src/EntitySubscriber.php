@@ -85,7 +85,7 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
       // this entity node type is 'send_per_content_type'.
       // Otherwise, when the default setting 'send_per_node' is set,
       // this is delegated to a manual action.
-      // $config = $this->configFactory->get('message_group_notify.settings');.
+      $config = $this->configFactory->get('message_group_notify.settings');
       $nodeTypeSettings = message_group_notify_get_settings('all', $entity->bundle());
       if ($nodeTypeSettings['send_mode'] === MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE) {
         // Check then if the operation is in the scope.
@@ -94,7 +94,10 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
           $messageGroup = [
             'groups' => $nodeTypeSettings['groups'],
             'channels' => $nodeTypeSettings['channels'],
-            'from_mail' => $nodeTypeSettings['from_mail'],
+          // @todo should be handled by MessageContact when available.
+            'from_name' => '',
+          // Use the system wide from mail for automatically sent Messages.
+            'from_mail' => $config->get('from_mail'),
           ];
           $this->messageGroupNotifySender->send($entity, $messageGroup);
         }

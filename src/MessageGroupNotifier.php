@@ -93,9 +93,16 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEnabledGroups() {
+  public function getEnabledGroups($bundle = NULL) {
     $groups = $this->getGroups();
-    // @todo filter groups from the system wide configuration
+    // @todo filter groups from the bundle configuration
+    if (NULL !== $bundle) {
+      $bundleGroups = message_group_notify_get_settings('groups', $bundle);
+      // @todo filter groups from the system wide configuration
+    }
+    else {
+      $systemGroupTypes = $this->getGroupTypes();
+    }
     return $groups;
   }
 
@@ -161,10 +168,8 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       // Currently limiting to User entity.
       if ($contact instanceof User) {
         try {
-          $params = [
-            'mail' => $contact->getEmail(),
-          ];
-          $singleResult = $this->messageNotifySender->send($message, $params, 'email');
+          $message_group['to_mail'] = $contact->getEmail();
+          $singleResult = $this->messageNotifySender->send($message, $message_group, $notifier_name);
           if (!$singleResult) {
             $fails[] = $contact;
           }
@@ -212,16 +217,17 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
           // Per message with a fallback to the test mail from
           // the site wide configuration.
           $toEmail = !empty($message_group['test_mail']) ? $message_group['test_mail'] : $config->get('default_test_mail');
-          $params = [
-            'mail' => $toEmail,
-          ];
-          $result = $this->messageNotifySender->send($message, $params, 'email');
+          $message_group['to_mail'] = $toEmail;
+          // The plugin in this case could be 'email', but using group_email
+          // so we have a chance to cover the from email customization.
+          $result = $this->messageNotifySender->send($message, $message_group, 'group_email');
 
         }
         // Send email to contacts from groups.
         else {
+          // @todo consider moving it on the GroupEmail Notifier plugin
           $contacts = $this->getContactsFromGroups($message_group['groups']);
-          $result = $this->sendToContacts($message, $message_group, $contacts, 'email');
+          $result = $this->sendToContacts($message, $message_group, $contacts, 'group_email');
         }
 
         // Show a status message on success if in configuration.

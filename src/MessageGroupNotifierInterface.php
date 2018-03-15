@@ -49,10 +49,13 @@ interface MessageGroupNotifierInterface {
   /**
    * Returns a list of group entities for enabled group types.
    *
+   * Filters groups from the system wide configuration
+   * or from the bundle if defined.
+   *
    * @return array
    *   List of MessageGroup entities.
    */
-  public function getEnabledGroups();
+  public function getEnabledGroups($bundle = NULL);
 
   /**
    * Returns a list of distinct contact entities for a group type.

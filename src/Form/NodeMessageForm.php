@@ -2,6 +2,7 @@
 
 namespace Drupal\message_group_notify\Form;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\message_group_notify\MessageGroupNotifierInterface;
@@ -58,12 +59,37 @@ class NodeMessageForm extends FormBase {
   }
 
   /**
+   * Returns the entity for the current route.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface|null
+   *   The content entity that is the subject of the Message.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
+  private function getEntityFromRoute() {
+    // @todo generalize to other content entities
+    // @todo use dependency injection
+    $entity = NULL;
+    $entityId = \Drupal::routeMatch()->getParameter('node');
+    try {
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $entity = \Drupal::entityTypeManager()->getStorage('node')->load($entityId);
+    }
+    catch (InvalidPluginDefinitionException $exception) {
+      $messenger = \Drupal::messenger();
+      $messenger->addMessage($exception->getMessage(), 'error');
+    }
+    return $entity;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $node_type = NULL) {
 
+    $entity = $this->getEntityFromRoute();
     $groupOptions = [];
-    foreach ($this->messageGroupNotifySender->getEnabledGroups() as $group) {
+    foreach ($this->messageGroupNotifySender->getEnabledGroups($entity->bundle()) as $group) {
       // @todo use group content entity
       $groupOptions[$group->id()] = $group->label();
     }
@@ -134,32 +160,27 @@ class NodeMessageForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $fromMail = $form_state->getValue('from_mail');
     $testMode = $form_state->getValue('test_mode');
+    $testMail = $form_state->getValue('test_mail');
 
-    // @todo generalize to other content entities
-    // @todo use dependency injection
-    $entityId = \Drupal::routeMatch()->getParameter('node');
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = \Drupal::entityTypeManager()->getStorage('node')->load($entityId);
+    $entity = $this->getEntityFromRoute();
     $nodeTypeSettings = message_group_notify_get_settings('all', $entity->bundle());
 
+    $messageGroup = [
+      'groups' => [],
+      'channels' => $nodeTypeSettings['channels'],
+      'from_mail' => $fromMail,
+    // @todo should be handled by MessageContact when available.
+      'from_name' => '',
+      'test_mail' => $testMail,
+    ];
+
     if ($testMode) {
-      $testMail = $form_state->getValue('test_mail');
-      $messageGroup = [
-        'groups' => [],
-        'channels' => $nodeTypeSettings['channels'],
-        'from_mail' => $fromMail,
-        'test_mail' => $testMail,
-      ];
       $this->messageGroupNotifySender->send($entity, $messageGroup, TRUE);
     }
     else {
       $groups = $form_state->getValue('groups');
       // @todo convert into MessageGroup content entity
-      $messageGroup = [
-        'groups' => $groups,
-        'channels' => $nodeTypeSettings['channels'],
-        'from_mail' => $fromMail,
-      ];
+      $messageGroup['groups'] = $groups;
       $this->messageGroupNotifySender->send($entity, $messageGroup);
     }
   }

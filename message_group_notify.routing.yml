@@ -2,7 +2,7 @@ message_group_notify.settings:
   path: '/admin/config/message/message_group_notify'
   defaults:
     _form: '\Drupal\message_group_notify\Form\SettingsForm'
-    _title: 'Message Group Notify settings'
+    _title: 'Message group notify settings'
   requirements:
     _permission: 'administer message group notify'
   options:
@@ -23,7 +23,7 @@ entity.node.message_group_notify:
 entity.node_type.message_group_notify:
   path: '/admin/structure/types/manage/{node_type}/message_group_notify'
   defaults:
-    _title: 'Message Group Notify'
+    _title: 'Message group notify'
     _form: '\Drupal\message_group_notify\Form\NodeTypeSettingsForm'
   requirements:
     _permission: 'administer message group notify'

@@ -87,6 +87,10 @@ class NodeMessageController extends ControllerBase {
         'data' => $this->t('Groups'),
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ],
+      'from' => [
+        'data' => $this->t('From'),
+        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+      ],
       'channels' => [
         'data' => $this->t('Channels'),
         'class' => [RESPONSIVE_PRIORITY_LOW],
@@ -126,7 +130,8 @@ class NodeMessageController extends ControllerBase {
     /** @var \Drupal\contact\Entity\Message $entity */
     return [
       'display' => render($subject),
-      // @todo get channels and groups.
+      // @todo get channels and groups from Message entity
+      'from' => '@todo',
       'groups' => '@todo',
       'channels' => '@todo',
       'author' => $entity->getOwner()->label(),

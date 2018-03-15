@@ -83,7 +83,10 @@ class NodeTypeSettingsForm extends FormBase {
       '#type' => 'radios',
       '#title' => t('Send mode'),
       '#description' => t('Enables per node (manual) or per content type (automatic) message group notify.'),
-      '#options' => ['send_per_node' => t('Per node only'), 'send_per_content_type' => t('Per content type and per node')],
+      '#options' => [
+        MessageGroupNotifierInterface::SEND_MODE_NODE => t('Per node only'),
+        MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE => t('Per content type and per node'),
+      ],
       '#default_value' => message_group_notify_get_settings('send_mode', $node_type),
     ];
 
@@ -158,6 +161,20 @@ class NodeTypeSettingsForm extends FormBase {
         if (isset($values[$setting])) {
           $settings[$setting] = is_array($values[$setting]) ? array_keys(array_filter($values[$setting])) : $values[$setting];
         }
+      }
+      // Warn the user if per content type is selected.
+      if ($values['send_mode'] === MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE) {
+        $messenger = \Drupal::messenger();
+        $messenger->addMessage(
+          t('Messages will now be sent automatically for the <em>@groups</em> groups on @node_type <em>@operations</em>.',
+            [
+              '@groups' => implode(', ', $values['groups']),
+              '@operations' => implode(', ', array_filter($values['operations'])),
+              '@node_type' => $node_type,
+            ]
+          ),
+          'warning'
+        );
       }
     }
     message_group_notify_set_settings($settings, $node_type);
