@@ -2,4 +2,4 @@ group_types:
   - user_role
 status_message:
   - on_failure
-test_mail: "admin@example.com"
+default_test_mail: "admin@example.com"

@@ -90,11 +90,11 @@ class EntitySubscriber implements EventSubscriberInterface, EntitySubscriberInte
       if ($nodeTypeSettings['send_mode'] === MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE) {
         // Check then if the operation is in the scope.
         if (in_array($operation, $nodeTypeSettings['operations'])) {
-          // @todo convert into MessageGroup content entity
+          // @todo convert into MessageGroup content entity hence this mapping.
           $messageGroup = [
             'groups' => $nodeTypeSettings['groups'],
             'channels' => $nodeTypeSettings['channels'],
-            // 'mail' => 'john@doe.org',.
+            'from_mail' => $nodeTypeSettings['from_mail'],
           ];
           $this->messageGroupNotifySender->send($entity, $messageGroup);
         }

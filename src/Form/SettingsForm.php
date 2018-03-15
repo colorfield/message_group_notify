@@ -99,15 +99,24 @@ class SettingsForm extends ConfigFormBase {
       ],
       '#default_value' => $config->get('status_message'),
     ];
-    // @todo add optional confirmation before sending
-    $form['test_mail'] = [
+    $form['default_from_mail'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Test email'),
+      '#title' => $this->t('Default from email'),
+      '#description' => $this->t('The default sender email address.'),
+      '#maxlength' => 254,
+      '#size' => 64,
+      '#required' => TRUE,
+      '#default_value' => empty($config->get('default_from_mail')) ? $this->config('system.site')->get('mail') : $config->get('default_from_mail'),
+    ];
+    // @todo add optional confirmation before sending
+    $form['default_test_mail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Default test email'),
       '#description' => $this->t('The default email address that will be used for test messages.'),
       '#maxlength' => 254,
       '#size' => 64,
       '#required' => TRUE,
-      '#default_value' => $config->get('test_mail'),
+      '#default_value' => $config->get('default_test_mail'),
     ];
     return parent::buildForm($form, $form_state);
   }
@@ -144,7 +153,8 @@ class SettingsForm extends ConfigFormBase {
     $this->config('message_group_notify.settings')
       ->set('group_types', $form_state->getValue('group_types'))
       ->set('status_message', $form_state->getValue('status_message'))
-      ->set('test_mail', $form_state->getValue('test_mail'))
+      ->set('default_from_mail', $form_state->getValue('default_from_mail'))
+      ->set('default_test_mail', $form_state->getValue('default_test_mail'))
       ->save();
   }
 

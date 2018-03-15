@@ -47,6 +47,14 @@ interface MessageGroupNotifierInterface {
   public function getGroups();
 
   /**
+   * Returns a list of group entities for enabled group types.
+   *
+   * @return array
+   *   List of MessageGroup entities.
+   */
+  public function getEnabledGroups();
+
+  /**
    * Returns a list of distinct contact entities for a group type.
    *
    * @param string $group_type

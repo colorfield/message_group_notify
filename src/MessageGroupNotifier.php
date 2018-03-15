@@ -60,6 +60,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    */
   public function getGroupsFromGroupType($group_type) {
     // @todo handle exception for non entity type like Mailchimp lists
+    // @todo exclude anonymous users for roles
     $groups = [];
     if ($this->entityTypeManager->hasDefinition($group_type)) {
       $groups = $this->entityTypeManager->getStorage($group_type)->loadMultiple();
@@ -92,6 +93,15 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
+  public function getEnabledGroups() {
+    $groups = $this->getGroups();
+    // @todo filter groups from the system wide configuration
+    return $groups;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getContactsFromGroupType($group_type) {
     // @todo create MessageContact content entity
     // @todo implement
@@ -118,7 +128,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         ->condition('roles', $group)
         ->execute();
       $users = $userStorage->loadMultiple($userIds);
-      // @todo reduce duplicate with comparable interface and use MessageContact entity
+      // @todo reduce duplicate with Comparable interface and use MessageContact entity
       foreach ($users as $user) {
         $contacts[$user->id()] = $user;
       }
@@ -186,6 +196,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       $message->set('field_published', $entity->isPublished());
       $message->set('field_node_reference', $entity);
       // @todo set group references
+      // @todo set from email
       // @todo create MessageGroupType config entity and MessageGroup content entity
       // $message->set(
       // 'field_message_group_reference',
@@ -200,7 +211,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         if ($test) {
           // Per message with a fallback to the test mail from
           // the site wide configuration.
-          $toEmail = !empty($message_group['to_mail']) ? $message_group['to_mail'] : $config->get('test_mail');
+          $toEmail = !empty($message_group['test_mail']) ? $message_group['test_mail'] : $config->get('default_test_mail');
           $params = [
             'mail' => $toEmail,
           ];
@@ -215,11 +226,21 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
 
         // Show a status message on success if in configuration.
         $statusMessage = $config->get('status_message');
-        if ($result && !empty($statusMessage['on_success'])) {
+        if ($result && !empty($statusMessage['on_success']) && !$test) {
           $messenger = \Drupal::messenger();
           $messenger->addMessage(
             t('Your message has been sent to the following groups: <em>@groups</em>.', [
               '@groups' => implode(', ', $message_group['groups']),
+            ])
+          );
+        }
+
+        // Always show a message when a test has been sent.
+        if ($result && $test) {
+          $messenger = \Drupal::messenger();
+          $messenger->addMessage(
+            t('Your message has been sent to the following test address: <em>@mail</em>.', [
+              '@mail' => $message_group['test_mail'],
             ])
           );
         }

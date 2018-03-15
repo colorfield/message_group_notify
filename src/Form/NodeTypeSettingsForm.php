@@ -4,11 +4,39 @@ namespace Drupal\message_group_notify\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\message_group_notify\MessageGroupNotifierInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Node type settings form.
  */
 class NodeTypeSettingsForm extends FormBase {
+
+  /**
+   * Drupal\message_group_notify\MessageGroupNotifierInterface definition.
+   *
+   * @var \Drupal\message_group_notify\MessageGroupNotifierInterface
+   */
+  protected $messageGroupNotify;
+
+  /**
+   * Constructs a NodeMessageForm object.
+   *
+   * @param \Drupal\message_group_notify\MessageGroupNotifierInterface $message_group_notifier
+   *   The message group notifier.
+   */
+  public function __construct(MessageGroupNotifierInterface $message_group_notifier) {
+    $this->messageGroupNotify = $message_group_notifier;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('message_group_notify.sender')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -27,27 +55,35 @@ class NodeTypeSettingsForm extends FormBase {
 
     $form_state->setStorage($storage);
 
-    $messageGroupNotifier = \Drupal::service('message_group_notify.sender');
-    $groups = $messageGroupNotifier->getGroups();
-    // @todo group options can be delimited with group types
-    // @todo limit group options from the system wide configuration
     $groupOptions = [];
-    foreach ($groups as $group) {
+    foreach ($this->messageGroupNotify->getEnabledGroups() as $group) {
       // @todo use group content entity
       $groupOptions[$group->id()] = $group->label();
     }
 
+    // @todo set require state once enabled
+    // @todo review default options once enabled see message_group_notify_get_setting_defaults
+    $form['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable message group notify for this content type'),
+      '#default_value' => message_group_notify_get_settings('enabled', $node_type),
+    ];
     $form['node'] = [
       '#type' => 'fieldset',
       '#title' => t('Content settings'),
       '#collapsible' => TRUE,
-      '#description' => t('You can enable per <em>node</em> or per <em>content type</em> group notify settings. If <em>node</em> is selected, messages will be sent manually from the <em>Group notify</em> tab of a node. If per <em>content type</em> is selected, messages will be sent automatically for the selected operations.'),
+      '#description' => t('You can enable per <em>node</em> or per <em>content type</em> group notify settings. If <em>node</em> is selected, messages will be sent manually from the <em>Group notify</em> tab of a node. If per <em>content type</em> is selected, messages will be sent automatically for the following selected operations to selected groups.'),
+      '#states' => [
+        'invisible' => [
+          ':input[name="enabled"]' => ['checked' => FALSE],
+        ],
+      ],
     ];
     $form['node']['send_mode'] = [
       '#type' => 'radios',
       '#title' => t('Send mode'),
       '#description' => t('Enables per node (manual) or per content type (automatic) message group notify.'),
-      '#options' => ['send_per_node' => t('Node'), 'send_per_content_type' => t('Content type')],
+      '#options' => ['send_per_node' => t('Per node only'), 'send_per_content_type' => t('Per content type and per node')],
       '#default_value' => message_group_notify_get_settings('send_mode', $node_type),
     ];
 
@@ -56,6 +92,11 @@ class NodeTypeSettingsForm extends FormBase {
       '#title' => t('Notification limits'),
       '#collapsible' => TRUE,
       '#description' => t('Limits are set per content type or per node message notifications, depending on the selected send mode.'),
+      '#states' => [
+        'invisible' => [
+          ':input[name="enabled"]' => ['checked' => FALSE],
+        ],
+      ],
     ];
     $form['limit']['operations'] = [
       '#type' => 'checkboxes',
@@ -68,11 +109,12 @@ class NodeTypeSettingsForm extends FormBase {
       '#default_value' => message_group_notify_get_settings('operations', $node_type),
     ];
     $form['limit']['groups'] = [
-      '#type' => 'checkboxes',
+      '#type' => 'select',
       '#title' => t('Groups'),
       // @todo get groups from groups types defined in the main settings form.
       // Currently getting roles for testing.
       '#options' => $groupOptions,
+      '#multiple' => TRUE,
       '#default_value' => message_group_notify_get_settings('groups', $node_type),
     ];
     $form['limit']['channels'] = [
@@ -87,10 +129,11 @@ class NodeTypeSettingsForm extends FormBase {
       '#default_value' => message_group_notify_get_settings('channels', $node_type),
     ];
 
-    $form['submit'] = [
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Submit'),
-      '#weight' => 10,
+      '#value' => t('Save configuration'),
+      '#button_type' => 'primary',
     ];
 
     return $form;
@@ -104,10 +147,17 @@ class NodeTypeSettingsForm extends FormBase {
     $storage = $form_state->getStorage();
     $node_type = $storage['node_type'];
     // Update message group notify settings.
-    $settings = message_group_notify_get_settings('all', $node_type);
-    foreach (message_group_notify_available_settings() as $setting) {
-      if (isset($values[$setting])) {
-        $settings[$setting] = is_array($values[$setting]) ? array_keys(array_filter($values[$setting])) : $values[$setting];
+    $settings = [];
+    // Empty configuration if set again to enabled.
+    if (!$values['enabled']) {
+      $settings = message_group_notify_get_setting_defaults($node_type);
+    }
+    else {
+      $settings = message_group_notify_get_settings('all', $node_type);
+      foreach (message_group_notify_available_settings() as $setting) {
+        if (isset($values[$setting])) {
+          $settings[$setting] = is_array($values[$setting]) ? array_keys(array_filter($values[$setting])) : $values[$setting];
+        }
       }
     }
     message_group_notify_set_settings($settings, $node_type);

@@ -14,6 +14,7 @@ entity.node.message_group_notify:
    _controller: '\Drupal\message_group_notify\Controller\NodeMessageController::messages'
    _title: 'Notify groups and view sent messages'
  requirements:
+   _message_group_notify_node_page_access: 'TRUE'
    _permission: 'use message group notify'
  options:
    _node_operation_route: TRUE

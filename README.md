@@ -80,6 +80,8 @@ to be added.
 and Format to 'Label (No link)'.
 - Create or edit an entity and check your mail.
 
+-![Message Group Notify - Email body](documentation/screenshot/message-mail-body.png?raw=true "Message Group Notify - Email body")
+
 Note that if you are using HTML for the 'Email body', you should install a
 module like
 [Mime Mail](https://www.drupal.org/project/mimemail)

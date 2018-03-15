@@ -8,7 +8,6 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Drupal\message_group_notify\MessageGroupNotifierInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Entity\ContentEntityInterface;
 
@@ -30,57 +29,13 @@ function message_group_notify_help($route_name, RouteMatchInterface $route_match
 }
 
 /**
- * Implements hook_theme().
- */
-function message_group_notify_theme() {
-  return [
-    'entity_group_notify' => [
-      'render element' => 'elements',
-    ],
-  ];
-}
-
-/**
- * Prepares variables for entity group notify templates.
- *
- * Default template: entity-group-notify.html.twig.
- *
- * @param array $variables
- *   An associative array containing:
- *   - elements: An associative array containing the components of the page
- *     - #entity: The entity that is the subject of the Message.
- *     - #send_message_form: A form to send the Message to MessageGroups.
- *     - #messages_table: The table of already sent messages for this entity.
- *   - attributes: HTML attributes for the containing element.
- */
-function template_preprocess_entity_group_notify(array &$variables) {
-  $variables['entity'] = $variables['elements']['#entity'];
-  $variables['send_message_form'] = $variables['elements']['#send_message_form'];
-  $variables['messages_table'] = $variables['elements']['#messages_table'];
-
-  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-  $entity = $variables['entity'];
-  if ($entity instanceof ContentEntityInterface) {
-    $variables['title'] = $variables['entity']->label();
-  }
-
-  // @todo add helper variables.
-
-  // Helpful $content variable for templates.
-  $variables['content'] = [];
-  foreach (Element::children($variables['elements']) as $key) {
-    $variables['content'][$key] = $variables['elements'][$key];
-  }
-}
-
-/**
  * Implements hook_entity_operation().
  */
 function message_group_notify_entity_operation(EntityInterface $entity) {
   $operations = [];
   $info = $entity->getEntityType();
 
-  if ($info->getBundleOf() == 'node') {
+  if ($info->getBundleOf() === 'node') {
     $account = \Drupal::currentUser();
 
     if ($account->hasPermission('administer nodes') && $account->hasPermission('administer content types')) {
@@ -173,6 +128,7 @@ function message_group_notify_set_settings($settings, $type_name) {
  */
 function message_group_notify_available_settings() {
   return [
+    'enabled',
     'groups',
     'send_mode',
     'operations',
@@ -185,10 +141,63 @@ function message_group_notify_available_settings() {
  */
 function message_group_notify_get_setting_defaults($type) {
   $defaults = [];
+  $defaults['enabled'] = FALSE;
   $defaults['groups'] = [];
-  $defaults['send_mode'] = MessageGroupNotifierInterface::SEND_MODE_NODE;
-  $defaults['operations'] = [MessageGroupNotifierInterface::OPERATION_CREATE];
-  $defaults['channels'] = ['mail'];
+  // The enabled value is not set by default, so at a first sight the
+  // following ones should be empty. But setting them to node mode and
+  // create mode while enabling them could avoid configuration issues.
+  // If this option is taken, we could add extra default values when
+  // enabled is set to TRUE.
+  // $defaults['send_mode']=MessageGroupNotifierInterface::SEND_MODE_NODE;
+  // $defaults['operations']=[MessageGroupNotifierInterface::OPERATION_CREATE];
+  // $defaults['channels']=['mail'];.
+  $defaults['send_mode'] = NULL;
+  $defaults['operations'] = [];
+  $defaults['channels'] = [];
 
   return $defaults;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function message_group_notify_theme() {
+  return [
+    'entity_group_notify' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for entity group notify templates.
+ *
+ * Default template: entity-group-notify.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing the components of the page
+ *     - #entity: The entity that is the subject of the Message.
+ *     - #send_message_form: A form to send the Message to MessageGroups.
+ *     - #messages_table: The table of already sent messages for this entity.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_entity_group_notify(array &$variables) {
+  $variables['entity'] = $variables['elements']['#entity'];
+  $variables['send_message_form'] = $variables['elements']['#send_message_form'];
+  $variables['messages_table'] = $variables['elements']['#messages_table'];
+
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  $entity = $variables['entity'];
+  if ($entity instanceof ContentEntityInterface) {
+    $variables['title'] = $variables['entity']->label();
+  }
+
+  // @todo add helper variables.
+
+  // Helpful $content variable for templates.
+  $variables['content'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
+  }
 }
