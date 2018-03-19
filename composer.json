@@ -10,5 +10,9 @@
     "issues": "https://www.drupal.org/project/issues/message_group_notify",
     "source": "http://cgit.drupalcode.org/message_group_notify"
   },
-  "require": { }
+  "require": {
+    "drupal/message": "~1.0",
+    "drupal/message_notify": "~1.0",
+    "drupal/token": "~1.1"
+  }
 }
