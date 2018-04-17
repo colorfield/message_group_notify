@@ -1,0 +1,10 @@
+entity.message_group.add_form:
+  route_name: entity.message_group.add_page
+  title: 'Add Message group'
+  appears_on:
+    - entity.message_group.collection
+entity.message_group_type.add_form:
+  route_name: entity.message_group_type.add_form
+  title: 'Add Message group type'
+  appears_on:
+    - entity.message_group_type.collection

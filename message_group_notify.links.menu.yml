@@ -4,3 +4,20 @@ message_group_notify.settings:
   description: 'Message Group Notify settings.'
   parent: message.main_settings
   weight: 99
+
+# Message group menu items definition
+entity.message_group.collection:
+  title: 'Message group list'
+  route_name: entity.message_group.collection
+  description: 'List Message group entities'
+  parent: system.admin_structure
+  weight: 100
+
+
+# Message group type menu items definition
+entity.message_group_type.collection:
+  title: 'Message group type'
+  route_name: entity.message_group_type.collection
+  description: 'List Message group type (bundles)'
+  parent: system.admin_structure
+  weight: 99

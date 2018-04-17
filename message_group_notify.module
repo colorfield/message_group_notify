@@ -189,11 +189,21 @@ function message_group_notify_get_setting_defaults($type) {
  * Implements hook_theme().
  */
 function message_group_notify_theme() {
-  return [
-    'entity_group_notify' => [
-      'render element' => 'elements',
-    ],
+  $theme = [];
+  $theme['message_group'] = [
+    'render element' => 'elements',
+    'file' => 'message_group.page.inc',
+    'template' => 'message_group',
   ];
+  $theme['message_group_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'message_group.page.inc',
+  ];
+  $theme['entity_group_notify'] = [
+    'render element' => 'elements',
+  ];
+  return $theme;
 }
 
 /**
@@ -227,4 +237,20 @@ function template_preprocess_entity_group_notify(array &$variables) {
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
   }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function message_group_notify_theme_suggestions_message_group(array $variables) {
+  $suggestions = [];
+  $entity = $variables['elements']['#message_group'];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'message_group__' . $sanitized_view_mode;
+  $suggestions[] = 'message_group__' . $entity->bundle();
+  $suggestions[] = 'message_group__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'message_group__' . $entity->id();
+  $suggestions[] = 'message_group__' . $entity->id() . '__' . $sanitized_view_mode;
+  return $suggestions;
 }
