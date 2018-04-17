@@ -1,0 +1,15 @@
+uuid: 941455f7-2f29-47fc-9267-06ed4ba966b5
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - message_group_notify
+id: mailchimp_list
+label: 'Mailchimp list'
+type: mailchimp_list
+description: 'Group type that relies on Mailchimp lists.'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

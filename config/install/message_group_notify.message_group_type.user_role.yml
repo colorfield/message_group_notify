@@ -1,0 +1,15 @@
+uuid: c9667347-d8fe-47fa-8e93-696c5ca48aea
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - message_group_notify
+id: user_role
+label: 'User role'
+type: user_role
+description: 'Group type that relies on user roles.'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

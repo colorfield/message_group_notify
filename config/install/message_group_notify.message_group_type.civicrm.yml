@@ -1,0 +1,15 @@
+uuid: 1adf08f9-298b-4c23-96d0-39aff6143b6d
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - message_group_notify
+id: civicrm_group
+label: 'CiviCRM group'
+type: civicrm_group
+description: 'Group type that relies on CiviCRM groups.'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

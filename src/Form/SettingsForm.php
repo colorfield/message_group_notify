@@ -73,18 +73,18 @@ class SettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('message_group_notify.settings');
-    // @todo group types should be fetched from a message_group_type config entity type
+
+    $groupTypeStorage = $this->entityTypeManager->getStorage('message_group_type');
+    $groupTypes = [];
+    foreach ($groupTypeStorage->loadMultiple() as $groupTypeId => $groupType) {
+      $groupTypes[$groupTypeId] = $groupType->label();
+    }
+
     $form['group_types'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Group types'),
       '#description' => $this->t('Enabled group types that will be exposed on entity create or edit form.'),
-      '#options' => [
-        'user_role' => $this->t('Role'),
-        'group' => $this->t('Group'),
-    // Not an entity type.
-        'mailchimp_list' => $this->t('Mailchimp list'),
-        'civicrm_group' => $this->t('CiviCRM group'),
-      ],
+      '#options' => $groupTypes,
       '#required' => TRUE,
       '#default_value' => $config->get('group_types'),
     ];
