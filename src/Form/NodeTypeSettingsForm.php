@@ -95,6 +95,7 @@ class NodeTypeSettingsForm extends FormBase {
       '#default_value' => message_group_notify_get_settings('send_mode', $node_type),
     ];
 
+    // @todo review ux or description, it should be clear that these limitations applies on per node send mode
     $form['limit'] = [
       '#type' => 'fieldset',
       '#title' => t('Notification limits'),

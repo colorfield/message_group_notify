@@ -226,6 +226,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       // @todo filter groups from the system wide configuration
     }
     else {
+      // @todo
       $configuredGroupTypes = $this->getGroupTypes();
     }
     return $groups;
@@ -303,7 +304,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         catch (MessageNotifyException $exception) {
           // @todo log
           $messenger = \Drupal::messenger();
-          $messenger->addMessage($exception->getMessage(), 'error');
+          $messenger->addError($exception->getMessage());
           $fails[] = $contact;
         }
       }
@@ -347,7 +348,6 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
           // The plugin in this case could be 'email', but using group_email
           // so we have a chance to cover the from email customization.
           $result = $this->messageNotifySender->send($message, $message_group, 'group_email');
-
         }
         // Send email to contacts from groups.
         else {

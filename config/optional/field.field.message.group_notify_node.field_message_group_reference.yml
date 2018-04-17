@@ -1,4 +1,4 @@
-uuid: 9f2d879d-6293-4b6f-82f6-73fbaf9a42f0
+uuid: ae85b5e2-c238-4e17-b823-144561444fba
 langcode: en
 status: true
 dependencies:
@@ -8,21 +8,21 @@ dependencies:
 id: message.group_notify_node.field_message_group_reference
 field_name: field_message_group_reference
 entity_type: message
-bundle: group_notify_message_group
+bundle: group_notify_node
 label: 'Message group reference'
 description: ''
-# @todo set to true once ready with groups
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''
-settings:
-  handler: default
-  handler_settings:
-    # @todo review bundles
-    target_bundles:
-      user_role: user_role
-    sort:
-      field: _none
+settings: {  }
+  #handler: default
+  #handler_settings:
+    # @todo set bundles (civicrm_group, ...) once ready with message_group entity
+    # currently limited to the user_role which has no bundle
+  #  target_bundles:
+  #    user_role: user_role
+  #  sort:
+  #    field: _none
 third_party_settings: {  }
 field_type: entity_reference
