@@ -2,7 +2,11 @@
 
 namespace Drupal\message_group_notify;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\message\Entity\Message;
 use Drupal\message\MessageInterface;
 use Drupal\message_notify\Exception\MessageNotifyException;
@@ -59,17 +63,137 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    * {@inheritdoc}
    */
   public function getGroupsFromGroupType($group_type) {
-    // @todo handle exception for non entity type like Mailchimp lists
-    // @todo exclude anonymous users for roles
-    $groups = [];
-    if ($this->entityTypeManager->hasDefinition($group_type)) {
-      $groups = $this->entityTypeManager->getStorage($group_type)->loadMultiple();
+    $groups = $this->getGroupFromGroupTypeStorage($group_type);
+    $result = $this->removeNonNotifiable($groups, $group_type);
+    return $result;
+  }
+
+  /**
+   * Facade for fetching groups for a group type.
+   *
+   * Currently burying this into a private method.
+   *
+   * @todo this should be negociated by a new content entity and/or a factory.
+   *
+   * @param string $group_type
+   *   Group type from the configuration.
+   *
+   * @return array
+   *   List of groups.
+   */
+  private function getGroupFromGroupTypeStorage($group_type) {
+    $result = [];
+    // @todo dependency injection
+    $messenger = \Drupal::messenger();
+    $moduleHandler = \Drupal::moduleHandler();
+    switch ($group_type) {
+      case 'user_role':
+      case 'group':
+        try {
+          // This replaces moduleExists for Group.
+          // @todo review if the message is clear for the site builder.
+          $result = $this->entityTypeManager->getStorage($group_type)->loadMultiple();
+        }
+        catch (InvalidPluginDefinitionException $exception) {
+          $messenger->addError($exception->getMessage());
+        }
+        break;
+
+      case 'civicrm_group':
+        $civicrmEntitiesStatus = TRUE;
+        // Check if CiviCRM Entity module is installed.
+        if ($moduleHandler->moduleExists('civicrm_entity')) {
+          // Check if the civicrm group and ontact entities are enabled.
+          $civicrmEnabledEntities = array_filter(
+            $this->entityTypeManager->getDefinitions(),
+            function (EntityTypeInterface $type) {
+              return $type->getProvider() == 'civicrm_entity' && $type->get('civicrm_entity_ui_exposed');
+            }
+          );
+          if (!array_key_exists($group_type, $civicrmEnabledEntities)) {
+            $civicrmEntitiesStatus = FALSE;
+          }
+          if (!array_key_exists('civicrm_contact', $civicrmEnabledEntities)) {
+            $civicrmEntitiesStatus = FALSE;
+          }
+          if (!$civicrmEntitiesStatus) {
+            $civicrmEntityUrl = Url::fromRoute('civicrm_entity.settings', [], [
+              'query' => ['destination' => \Drupal::request()->getRequestUri()],
+            ]);
+            $civicrmEntityLink = Link::fromTextAndUrl(t('CiviCRM Group and Contact entities'), $civicrmEntityUrl);
+            $civicrmEntityLink = $civicrmEntityLink->toRenderable();
+            $groupTypesUrl = Url::fromRoute('message_group_notify.settings', [], [
+              'query' => ['destination' => \Drupal::request()->getRequestUri()],
+            ]);
+            $groupTypesLink = Link::fromTextAndUrl(t('CiviCRM group type'), $groupTypesUrl);
+            $groupTypesLink = $groupTypesLink->toRenderable();
+            $messenger->addError(t('@civicrm_entity_link must be enabled or @group_types_link must be disabled.', [
+              '@civicrm_entity_link' => render($civicrmEntityLink),
+              '@group_types_link' => render($groupTypesLink),
+            ]));
+          }
+        }
+        else {
+          $civicrmEntitiesStatus = FALSE;
+          $messenger->addError(t('CiviCRM Entity module is not installed.'));
+        }
+
+        if ($civicrmEntitiesStatus) {
+          try {
+            $civicrmStorage = $this->entityTypeManager->getStorage('civicrm_group');
+            $result = $civicrmStorage->loadByProperties(['id' => 'civicrm_group']);
+          }
+          catch (InvalidPluginDefinitionException $exception) {
+            $messenger->addError($exception->getMessage());
+          }
+        }
+        break;
+
+      case 'mailchimp':
+        $messenger->addError(t('Mailchimp lists are not implemented yet.'));
+        break;
     }
-    else {
-      $messenger = \Drupal::messenger();
-      $messenger->addMessage(t('Entity type @entity_type_id is not found.', ['@entity_type_id' => $group_type]), 'error');
+    return $result;
+  }
+
+  /**
+   * Removes groups that cannot be candidate for a notification.
+   *
+   * @param array $groups
+   *   List of all available groups.
+   * @param string $group_type
+   *   Group type key.
+   *
+   * @return array
+   *   List of groups that can be notified.
+   */
+  private function removeNonNotifiable(array $groups, $group_type) {
+    // Key / Value based on Group key / Group type.
+    $groupsToRemove = ['anonymous' => 'user_role'];
+    foreach ($groups as $groupKey => $group) {
+      if (array_key_exists($groupKey, $groupsToRemove) && $group_type === $groupsToRemove[$groupKey]) {
+        unset($groups[$groupKey]);
+      }
     }
     return $groups;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEnabledGroupTypesGroups() {
+    $groupTypes = $this->getGroupTypes();
+    $result = [];
+    foreach ($groupTypes as $groupType) {
+      $groups = [];
+      if ($groupType !== 0) {
+        foreach ($this->getGroupsFromGroupType($groupType) as $group) {
+          $groups[] = $group;
+        }
+        $result[$groupType] = $groups;
+      }
+    }
+    return $result;
   }
 
   /**
@@ -79,21 +203,22 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
     // @todo create MessageGroup content entity
     // @todo get other groups from group types currently working with roles only
     $groupTypes = $this->getGroupTypes();
-    $groups = [];
+    $result = [];
     foreach ($groupTypes as $groupType) {
       if ($groupType !== 0) {
         foreach ($this->getGroupsFromGroupType($groupType) as $group) {
-          $groups[] = $group;
+          $result[] = $group;
         }
       }
     }
-    return $groups;
+    return $result;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getEnabledGroups($bundle = NULL) {
+    // @todo implement
     $groups = $this->getGroups();
     // @todo filter groups from the bundle configuration
     if (NULL !== $bundle) {
@@ -101,7 +226,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       // @todo filter groups from the system wide configuration
     }
     else {
-      $systemGroupTypes = $this->getGroupTypes();
+      $configuredGroupTypes = $this->getGroupTypes();
     }
     return $groups;
   }
@@ -124,6 +249,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   public function getContactsFromGroups(array $groups) {
     // @todo create MessageContact content entity, currently possible id conflict among MessageGroupTypes
     // @todo caching
+    // @todo get other contact related entities depending from group type
     $contacts = [];
     // The MessageGroup entity should hold a reference to the MessageGroupType
     // allowing to use the right storage.

@@ -39,6 +39,14 @@ interface MessageGroupNotifierInterface {
   public function getGroupsFromGroupType($group_type);
 
   /**
+   * Returns a list of groups wrapped by enabled group types.
+   *
+   * @return array
+   *   List Group types containing MessageGroup entities.
+   */
+  public function getEnabledGroupTypesGroups();
+
+  /**
    * Returns a list of group entities for all group types.
    *
    * @return array

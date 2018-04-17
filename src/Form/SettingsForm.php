@@ -128,8 +128,8 @@ class SettingsForm extends ConfigFormBase {
     $groupTypes = $form_state->getValue('group_types');
 
     // Temporary message during development.
-    if (!empty($groupTypes['mailchimp_list']) || !empty($groupTypes['group']) || !empty($groupTypes['civicrm_group'])) {
-      $form_state->setErrorByName('group_types', $this->t('Only the <strong>Role</strong> group type is currently being implemented.'));
+    if (!empty($groupTypes['mailchimp_list']) || !empty($groupTypes['group'])) {
+      $form_state->setErrorByName('group_types', $this->t('Only the <strong>Role</strong> and <strong>CiviCRM group</strong> group types are currently being implemented.'));
     }
 
     if (!empty($groupTypes['mailchimp_list']) && !$this->moduleHandler->moduleExists('mailchimp_list')) {
@@ -138,7 +138,7 @@ class SettingsForm extends ConfigFormBase {
     if (!empty($groupTypes['group']) && !$this->moduleHandler->moduleExists('group')) {
       $form_state->setErrorByName('group_types', $this->t('Group module needs to be installed.'));
     }
-    if (!empty($groupTypes['civicrm_group']) && !$this->moduleHandler->moduleExists('civicrm_group')) {
+    if (!empty($groupTypes['civicrm_group']) && !$this->moduleHandler->moduleExists('civicrm')) {
       $form_state->setErrorByName('group_types', $this->t('CiviCRM module needs to be installed.'));
     }
     parent::validateForm($form, $form_state);

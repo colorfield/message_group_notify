@@ -56,9 +56,13 @@ class NodeTypeSettingsForm extends FormBase {
     $form_state->setStorage($storage);
 
     $groupOptions = [];
-    foreach ($this->messageGroupNotify->getEnabledGroups() as $group) {
+    // @todo get label for the group type key
+    foreach ($this->messageGroupNotify->getEnabledGroupTypesGroups() as $key => $groups) {
       // @todo use group content entity
-      $groupOptions[$group->id()] = $group->label();
+      $groupOptions[$key] = [];
+      foreach ($groups as $group) {
+        $groupOptions[$key][$group->id()] = $group->label();
+      }
     }
 
     // @todo set require state once enabled
@@ -79,6 +83,7 @@ class NodeTypeSettingsForm extends FormBase {
         ],
       ],
     ];
+    // @todo review ux, checkboxes should be better here
     $form['node']['send_mode'] = [
       '#type' => 'radios',
       '#title' => t('Send mode'),
