@@ -55,15 +55,7 @@ class NodeTypeSettingsForm extends FormBase {
 
     $form_state->setStorage($storage);
 
-    $groupOptions = [];
-    // @todo get label for the group type key
-    foreach ($this->messageGroupNotify->getEnabledGroupTypesGroups() as $key => $groups) {
-      // @todo use group content entity
-      $groupOptions[$key] = [];
-      foreach ($groups as $group) {
-        $groupOptions[$key][$group->id()] = $group->label();
-      }
-    }
+    $groupOptions = $this->messageGroupNotify->getGroupsSelectOptions();
 
     // @todo set require state once enabled
     // @todo review default options once enabled see message_group_notify_get_setting_defaults
@@ -78,12 +70,12 @@ class NodeTypeSettingsForm extends FormBase {
       '#collapsible' => TRUE,
       '#description' => t('You can enable per <em>node</em> or per <em>content type</em> group notify settings. If <em>node</em> is selected, messages will be sent manually from the <em>Group notify</em> tab of a node. If per <em>content type</em> is selected, messages will be sent automatically for the following selected operations to selected groups.'),
       '#states' => [
-        'invisible' => [
-          ':input[name="enabled"]' => ['checked' => FALSE],
+        'visible' => [
+          ':input[name="enabled"]' => ['checked' => TRUE],
         ],
       ],
     ];
-    // @todo review ux, checkboxes should be better here
+    // @todo review ux, checkboxes and wording review should be better here
     $form['node']['send_mode'] = [
       '#type' => 'radios',
       '#title' => t('Send mode'),
@@ -102,26 +94,30 @@ class NodeTypeSettingsForm extends FormBase {
       '#collapsible' => TRUE,
       '#description' => t('Limits are set per content type or per node message notifications, depending on the selected send mode.'),
       '#states' => [
-        'invisible' => [
-          ':input[name="enabled"]' => ['checked' => FALSE],
+        'visible' => [
+          ':input[name="enabled"]' => ['checked' => TRUE],
         ],
       ],
     ];
     $form['limit']['operations'] = [
       '#type' => 'checkboxes',
       '#title' => t('Operations'),
+      '#description' => t("Applies for 'per content type' send mode only."),
       '#options' => [
         'create' => t('Create'),
         'update' => t('Update'),
         'delete' => t('Delete'),
       ],
       '#default_value' => message_group_notify_get_settings('operations', $node_type),
+      '#states' => [
+        'visible' => [
+          ':input[name="send_mode"]' => ['value' => MessageGroupNotifierInterface::SEND_MODE_CONTENT_TYPE],
+        ],
+      ],
     ];
     $form['limit']['groups'] = [
       '#type' => 'select',
       '#title' => t('Groups'),
-      // @todo get groups from groups types defined in the main settings form.
-      // Currently getting roles for testing.
       '#options' => $groupOptions,
       '#multiple' => TRUE,
       '#default_value' => message_group_notify_get_settings('groups', $node_type),

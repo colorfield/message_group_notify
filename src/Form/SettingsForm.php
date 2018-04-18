@@ -99,6 +99,7 @@ class SettingsForm extends ConfigFormBase {
       ],
       '#default_value' => $config->get('status_message'),
     ];
+    // @todo add configuration to optionally show a ConfirmForm before sending
     $form['default_from_mail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default from email'),
@@ -108,7 +109,6 @@ class SettingsForm extends ConfigFormBase {
       '#required' => TRUE,
       '#default_value' => empty($config->get('default_from_mail')) ? $this->config('system.site')->get('mail') : $config->get('default_from_mail'),
     ];
-    // @todo add optional confirmation before sending
     $form['default_test_mail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default test email'),

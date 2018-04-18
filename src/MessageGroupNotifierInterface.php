@@ -13,6 +13,10 @@ interface MessageGroupNotifierInterface {
 
   const SEND_MODE_CONTENT_TYPE = 'send_per_content_type';
 
+  const MAIL_RELAY_CONTACT = 'send_per_contact';
+
+  const MAIL_RELAY_LIST = 'send_per_list';
+
   const OPERATION_CREATE = 'create';
 
   const OPERATION_UPDATE = 'update';
@@ -25,56 +29,44 @@ interface MessageGroupNotifierInterface {
    * @return array
    *   List of group type strings.
    */
-  public function getGroupTypes();
+  public function getConfiguredGroupTypes();
 
   /**
-   * Returns a list of group entities for a group type.
+   * Returns a list of MessageGroup entities for a MessageGroupType.
    *
-   * @param string $group_type
-   *   Group type.
+   * @param string $group_type_id
+   *   MessageGroupType entity id.
+   * @param string $entity_type_id
+   *   Optional entity type id.
+   * @param string $bundle
+   *   Optional entity bundle id.
    *
    * @return array
    *   List of MessageGroup entities.
    */
-  public function getGroupsFromGroupType($group_type);
+  public function getGroupsFromGroupType($group_type_id, $entity_type_id = NULL, $bundle = NULL);
 
   /**
-   * Returns a list of groups wrapped by enabled group types.
+   * Returns a flat list of MessageGroup entities.
    *
-   * @return array
-   *   List Group types containing MessageGroup entities.
-   */
-  public function getEnabledGroupTypesGroups();
-
-  /**
-   * Returns a list of group entities for all group types.
+   * Optionally filter by entity type id and bundle from
+   * the entity type configuration.
+   * Can be used to limit available MessageGroups on the
+   * 'Group Notify send' tab from an Article node or for the operations
+   * covered within the SEND_MODE_CONTENT_TYPE for this bundle.
    *
    * @return array
    *   List of MessageGroup entities.
    */
-  public function getGroups();
+  public function getGroups($entity_type_id = NULL, $bundle = NULL);
 
   /**
-   * Returns a list of group entities for enabled group types.
-   *
-   * Filters groups from the system wide configuration
-   * or from the bundle if defined.
+   * Returns a nested list of groups suitable for form select widget options.
    *
    * @return array
-   *   List of MessageGroup entities.
+   *   Nested list of MessageGroupTypes containing MessageGroup label entities.
    */
-  public function getEnabledGroups($bundle = NULL);
-
-  /**
-   * Returns a list of distinct contact entities for a group type.
-   *
-   * @param string $group_type
-   *   Group type.
-   *
-   * @return array
-   *   List of MessageContact entities.
-   */
-  public function getContactsFromGroupType($group_type);
+  public function getGroupsSelectOptions($entity_type_id = NULL, $bundle = NULL);
 
   /**
    * Returns a list of distinct contact entities for a list of MessageGroup.
@@ -85,7 +77,7 @@ interface MessageGroupNotifierInterface {
    * @return array
    *   List of MessageContact entities.
    */
-  public function getContactsFromGroups(array $groups);
+  public function getContacts(array $groups);
 
   /**
    * Process and send a message to groups.

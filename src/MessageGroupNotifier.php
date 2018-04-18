@@ -4,6 +4,7 @@ namespace Drupal\message_group_notify;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -53,18 +54,40 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function getGroupTypes() {
-    // @todo create MessageGroupType config entity
+  public function getConfiguredGroupTypes() {
+    $result = [];
     $config = $this->configFactory->get('message_group_notify.settings');
-    return $config->get('group_types');
+    $configuredGroupTypes = $config->get('group_types');
+    $enabledGroupTypeIds = [];
+    foreach ($configuredGroupTypes as $groupTypeId) {
+      if ($groupTypeId !== 0) {
+        $enabledGroupTypeIds[$groupTypeId] = $groupTypeId;
+      }
+    }
+    try {
+      $result = $this->entityTypeManager->getStorage('message_group_type')->loadMultiple($enabledGroupTypeIds);
+    }
+    catch (InvalidPluginDefinitionException $exception) {
+      \Drupal::messenger()->addError($exception->getMessage());
+    }
+    return $result;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getGroupsFromGroupType($group_type) {
-    $groups = $this->getGroupFromGroupTypeStorage($group_type);
-    $result = $this->removeNonNotifiable($groups, $group_type);
+  public function getGroupsFromGroupType($group_type_id, $entity_type_id = NULL, $bundle = NULL) {
+    $groups = $this->getGroupFromGroupTypeStorage($group_type_id);
+    // Get only groups that are part of the entity bundle configuration.
+    if (isset($entity_type_id) && isset($bundle)) {
+      $bundleGroupValues = message_group_notify_get_settings('groups', $bundle);
+      $bundleGroups = [];
+      foreach ($bundleGroupValues as $bundleGroupValue) {
+        $bundleGroups[$bundleGroupValue] = $bundleGroupValue;
+      }
+      $groups = array_intersect_key($groups, $bundleGroups);
+    }
+    $result = $this->removeNonNotifiable($groups, $group_type_id);
     return $result;
   }
 
@@ -73,7 +96,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    *
    * Currently burying this into a private method.
    *
-   * @todo this should be negociated by a new content entity and/or a factory.
+   * @todo this should be negociated by a MessageGroup entity type and/or a factory.
    *
    * @param string $group_type
    *   Group type from the configuration.
@@ -86,6 +109,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
     // @todo dependency injection
     $messenger = \Drupal::messenger();
     $moduleHandler = \Drupal::moduleHandler();
+    // @todo use MessageGroup content entity to allow a common interface on various group types
     switch ($group_type) {
       case 'user_role':
       case 'group':
@@ -152,6 +176,14 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       case 'mailchimp':
         $messenger->addError(t('Mailchimp lists are not implemented yet.'));
         break;
+
+      default:
+        \Drupal::messenger()->addError(
+          t('Message group type @group_type is not implememented.',
+            ['@group_type' => $group_type]
+          )
+        );
+        break;
     }
     return $result;
   }
@@ -162,7 +194,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
    * @param array $groups
    *   List of all available groups.
    * @param string $group_type
-   *   Group type key.
+   *   Group type entity id.
    *
    * @return array
    *   List of groups that can be notified.
@@ -181,33 +213,15 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEnabledGroupTypesGroups() {
-    $groupTypes = $this->getGroupTypes();
-    $result = [];
-    foreach ($groupTypes as $groupType) {
-      $groups = [];
-      if ($groupType !== 0) {
-        foreach ($this->getGroupsFromGroupType($groupType) as $group) {
-          $groups[] = $group;
-        }
-        $result[$groupType] = $groups;
-      }
-    }
-    return $result;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getGroups() {
-    // @todo create MessageGroup content entity
+  public function getGroups($entity_type_id = NULL, $bundle = NULL) {
+    // @todo use MessageGroup content entity
     // @todo get other groups from group types currently working with roles only
-    $groupTypes = $this->getGroupTypes();
+    $groupTypes = $this->getConfiguredGroupTypes();
     $result = [];
     foreach ($groupTypes as $groupType) {
       if ($groupType !== 0) {
-        foreach ($this->getGroupsFromGroupType($groupType) as $group) {
-          $result[] = $group;
+        foreach ($this->getGroupsFromGroupType($groupType, $entity_type_id, $bundle) as $group) {
+          $result[$group->id()] = $group;
         }
       }
     }
@@ -217,42 +231,28 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEnabledGroups($bundle = NULL) {
-    // @todo implement
-    $groups = $this->getGroups();
-    // @todo filter groups from the bundle configuration
-    if (NULL !== $bundle) {
-      $bundleGroups = message_group_notify_get_settings('groups', $bundle);
-      // @todo filter groups from the system wide configuration
+  public function getGroupsSelectOptions($entity_type_id = NULL, $bundle = NULL) {
+    $result = [];
+    foreach ($this->getConfiguredGroupTypes() as $groupTypeId => $groupType) {
+      $result[$groupTypeId] = [];
+      foreach ($this->getGroupsFromGroupType($groupTypeId, $entity_type_id, $bundle) as $group) {
+        // @todo use MessageGroupInterface
+        /* @var $group ContentEntityInterface */
+        $result[$groupTypeId][$group->id()] = $group->label();
+      }
     }
-    else {
-      // @todo
-      $configuredGroupTypes = $this->getGroupTypes();
-    }
-    return $groups;
+    return $result;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getContactsFromGroupType($group_type) {
-    // @todo create MessageContact content entity
-    // @todo implement
-    $contacts = [];
-    $messenger = \Drupal::messenger();
-    $messenger->addMessage(t('MessageGroupNotifier::getContactsFromGroupType() is not implemented yet.'), 'error');
-    return $contacts;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getContactsFromGroups(array $groups) {
+  public function getContacts(array $groups) {
     // @todo create MessageContact content entity, currently possible id conflict among MessageGroupTypes
     // @todo caching
     // @todo get other contact related entities depending from group type
     $contacts = [];
-    // The MessageGroup entity should hold a reference to the MessageGroupType
+    // @todo the MessageGroup entity should hold a reference to the MessageGroupType
     // allowing to use the right storage.
     // Currently limiting the storage to user_role and user entities.
     $userStorage = $this->entityTypeManager->getStorage('user');
@@ -333,7 +333,12 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
       // $message->set(
       // 'field_message_group_reference',
       // $message_group['groups']);
-      $message->save();
+      try {
+        $message->save();
+      }
+      catch (EntityStorageException $exception) {
+        \Drupal::messenger()->addError($exception->getMessage());
+      }
 
       // @todo handle channels here: mail, pwa, sms, ...
       $config = $this->configFactory->get('message_group_notify.settings');
@@ -352,7 +357,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         // Send email to contacts from groups.
         else {
           // @todo consider moving it on the GroupEmail Notifier plugin
-          $contacts = $this->getContactsFromGroups($message_group['groups']);
+          $contacts = $this->getContacts($message_group['groups']);
           $result = $this->sendToContacts($message, $message_group, $contacts, 'group_email');
         }
 
@@ -371,7 +376,7 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         if ($result && $test) {
           $messenger = \Drupal::messenger();
           $messenger->addMessage(
-            t('Your message has been sent to the following test address: <em>@mail</em>.', [
+            t('Your message has been sent to the following <em>test</em> address: <em>@mail</em>.', [
               '@mail' => $message_group['test_mail'],
             ])
           );
@@ -381,13 +386,13 @@ class MessageGroupNotifier implements MessageGroupNotifierInterface {
         if (!$result && !empty($statusMessage['on_failure'])) {
           // @todo be more specific here, the error cause can be roughly missing subject or issue with smtp
           $messenger = \Drupal::messenger();
-          $messenger->addMessage('The message has been created but an error occurred while sending it by mail.', 'error');
+          $messenger->addError('The message has been created but an error occurred while sending it by mail.');
         }
       }
       catch (MessageNotifyException $exception) {
         // @todo log
         $messenger = \Drupal::messenger();
-        $messenger->addMessage($exception->getMessage(), 'error');
+        $messenger->addError($exception->getMessage());
       }
     }
     return $result;

@@ -87,71 +87,111 @@ class NodeMessageForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $node_type = NULL) {
 
-    $entity = $this->getEntityFromRoute();
-    $groupOptions = [];
-    foreach ($this->messageGroupNotifySender->getEnabledGroups($entity->bundle()) as $group) {
-      // @todo use group content entity
-      $groupOptions[$group->id()] = $group->label();
+    try {
+      $entity = $this->getEntityFromRoute();
+      $groupOptions = $this->messageGroupNotifySender->getGroupsSelectOptions(
+        $entity->getEntityTypeId(),
+        $entity->bundle()
+      );
+
+      // @todo currently limited to Mail channel, cover others while implementing them
+      $config = $this->configFactory->get('message_group_notify.settings');
+
+      // @todo entity autocomplete based on MessageContact, limited by MessageGroup
+      $form['from_mail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('From email'),
+        '#description' => $this->t('The sender email address.'),
+        '#maxlength' => 254,
+        '#size' => 64,
+        '#default_value' => $config->get('default_from_mail'),
+        '#required' => TRUE,
+      ];
+      $form['test_mode'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Send a test'),
+      ];
+      // @todo entity autocomplete based on MessageContact
+      $form['test_mail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Test email'),
+        '#description' => $this->t('The email address that will receive the test.'),
+        '#maxlength' => 254,
+        '#size' => 64,
+        '#default_value' => $config->get('default_test_mail'),
+        '#states' => [
+          'visible' => [
+            ':input[name="test_mode"]' => ['checked' => TRUE],
+          ],
+          'required' => [
+            ':input[name="test_mode"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+      $form['groups'] = [
+        '#type' => 'select',
+        '#title' => t('Groups'),
+        // @todo get groups from groups types defined in the main settings form.
+        // Currently getting roles for testing.
+        '#options' => $groupOptions,
+        '#multiple' => TRUE,
+        '#limit_validation_errors' => ['submit'],
+        '#default_value' => message_group_notify_get_settings('groups', $node_type),
+        '#states' => [
+          'visible' => [
+            ':input[name="test_mode"]' => ['checked' => FALSE],
+          ],
+          'required' => [
+            ':input[name="test_mode"]' => ['checked' => FALSE],
+          ],
+        ],
+      ];
+
+      // @todo limit this option if other MessageGroupTypes than user_role and group is configured
+      // for this content type (so civicrm_group or mailchimp_list)
+      // show an option to send via Drupal mail or via MessageGroupType list
+      // in case of a mixture of MessageGroupType MessageGroup selection
+      // e.g. user_role Administrator and civicrm_group Administrator
+      // a warning should be shown during validation to prevent sending
+      // with lists which can result of duplicate MessageContact sending
+      // (and this should not be supported).
+      $form['mail_relay'] = [
+        '#type' => 'radios',
+        '#title' => t('Mail relay'),
+        '#description' => t("Send per contact or per list. If a mixture of groups is selected, e.g. <em>Role 'Administrator'</em> and CiviCRM group <em>'Administrator'</em>, only the 'Per contact' will be available, to prevent sending duplicates."),
+        '#options' => [
+          MessageGroupNotifierInterface::MAIL_RELAY_CONTACT => t('Per contact, using Drupal mail.'),
+          MessageGroupNotifierInterface::MAIL_RELAY_LIST => t('Per list, using the Message Group Type list.'),
+        ],
+        '#default_value' => message_group_notify_get_settings('send_mode', $node_type),
+        '#states' => [
+          'visible' => [
+            ':input[name="test_mode"]' => ['checked' => FALSE],
+          ],
+        ],
+      ];
+
+      $form['actions']['#type'] = 'actions';
+      $form['actions']['submit'] = [
+        '#type' => 'submit',
+        '#value' => t('Send'),
+        '#button_type' => 'primary',
+      ];
+    }
+    catch (InvalidPluginDefinitionException $exception) {
+      \Drupal::messenger()->addError($exception->getMessage());
     }
 
-    $config = $this->configFactory->get('message_group_notify.settings');
-
-    // @todo entity autocomplete based on MessageContact, limited by MessageGroup
-    $form['from_mail'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('From email'),
-      '#description' => $this->t('The sender email address.'),
-      '#maxlength' => 254,
-      '#size' => 64,
-      '#default_value' => $config->get('default_from_mail'),
-    ];
-    $form['test_mode'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Send a test'),
-    ];
-    // @todo entity autocomplete based on MessageContact
-    $form['test_mail'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Test email'),
-      '#description' => $this->t('The email address that will receive the test.'),
-      '#maxlength' => 254,
-      '#size' => 64,
-      '#default_value' => $config->get('default_test_mail'),
-      '#states' => [
-        'invisible' => [
-          ':input[name="test_mode"]' => ['checked' => FALSE],
-        ],
-        'required' => [
-          ':input[name="test_mode"]' => ['checked' => TRUE],
-        ],
-      ],
-    ];
-    $form['groups'] = [
-      '#type' => 'select',
-      '#title' => t('Groups'),
-      // @todo get groups from groups types defined in the main settings form.
-      // Currently getting roles for testing.
-      '#options' => $groupOptions,
-      '#multiple' => TRUE,
-      '#limit_validation_errors' => ['submit'],
-      '#default_value' => message_group_notify_get_settings('groups', $node_type),
-      '#states' => [
-        'invisible' => [
-          ':input[name="test_mode"]' => ['checked' => TRUE],
-        ],
-        'required' => [
-          ':input[name="test_mode"]' => ['checked' => FALSE],
-        ],
-      ],
-    ];
-
-    $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => t('Send'),
-      '#button_type' => 'primary',
-    ];
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // @todo add form validation depending on the selected message group types
+    $groups = $form_state->getValue('groups');
+    parent::validateForm($form, $form_state);
   }
 
   /**
@@ -161,27 +201,35 @@ class NodeMessageForm extends FormBase {
     $fromMail = $form_state->getValue('from_mail');
     $testMode = $form_state->getValue('test_mode');
     $testMail = $form_state->getValue('test_mail');
+    $mailRelay = $form_state->getValue('mail_relay');
 
-    $entity = $this->getEntityFromRoute();
-    $nodeTypeSettings = message_group_notify_get_settings('all', $entity->bundle());
+    try {
+      $entity = $this->getEntityFromRoute();
+      // @todo include entity type id in configuration, not only bundle
+      $nodeTypeSettings = message_group_notify_get_settings('all', $entity->bundle());
 
-    $messageGroup = [
-      'groups' => [],
-      'channels' => $nodeTypeSettings['channels'],
-      'from_mail' => $fromMail,
-    // @todo should be handled by MessageContact when available.
-      'from_name' => '',
-      'test_mail' => $testMail,
-    ];
+      $messageGroup = [
+        'groups' => [],
+        'channels' => $nodeTypeSettings['channels'],
+        'from_mail' => $fromMail,
+        // @todo should be handled by MessageContact when available.
+        'from_name' => '',
+        'test_mail' => $testMail,
+        'mail_relay' => $mailRelay,
+      ];
 
-    if ($testMode) {
-      $this->messageGroupNotifySender->send($entity, $messageGroup, TRUE);
+      if ($testMode) {
+        $this->messageGroupNotifySender->send($entity, $messageGroup, TRUE);
+      }
+      else {
+        $groups = $form_state->getValue('groups');
+        // @todo convert into MessageGroup content entity
+        $messageGroup['groups'] = $groups;
+        $this->messageGroupNotifySender->send($entity, $messageGroup);
+      }
     }
-    else {
-      $groups = $form_state->getValue('groups');
-      // @todo convert into MessageGroup content entity
-      $messageGroup['groups'] = $groups;
-      $this->messageGroupNotifySender->send($entity, $messageGroup);
+    catch (InvalidPluginDefinitionException $exception) {
+      \Drupal::messenger()->addError($exception->getMessage());
     }
   }
 
